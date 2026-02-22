@@ -277,20 +277,18 @@ export async function uploadInlineMedia(request, env, supabase, user) {
         const folder = '/blogs/inline';
         const result = await uploadToImageKit(env, file, file.name, folder);
 
-        // Optionally record in media_assets if owner_id is provided
-        if (ownerId) {
-            await supabase
-                .from('media_assets')
-                .insert([{
-                    file_key: result.fileId,
-                    url: result.url,
-                    owner_type: ownerType,
-                    owner_id: ownerId,
-                    asset_type: assetType,
-                    is_private: false,
-                    created_at: new Date().toISOString()
-                }]);
-        }
+        // Always record in media_assets for tracking/cleanup
+        await supabase
+            .from('media_assets')
+            .insert([{
+                file_key: result.fileId,
+                url: result.url,
+                owner_type: ownerType,
+                owner_id: ownerId || null, // Will be associated later if null
+                asset_type: assetType,
+                is_private: false,
+                created_at: new Date().toISOString()
+            }]);
 
         return successResponse({
             url: result.url,

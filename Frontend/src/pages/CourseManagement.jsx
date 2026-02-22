@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AdminLayout from '../components/Admin/AdminLayout'
 import { courseAPI } from '../services/api'
-import { Search, Plus, Edit3, Trash2, BookOpen, Users, Star, DollarSign, AlertTriangle, X, CheckCircle, Loader } from 'lucide-react'
+import { Search, Plus, Edit3, Trash2, BookOpen, Users, Star, DollarSign, AlertTriangle, X, CheckCircle, Loader, IndianRupee } from 'lucide-react'
 
 const CourseManagement = () => {
     const navigate = useNavigate()
@@ -123,7 +123,7 @@ const CourseManagement = () => {
                     </div>
                 </div>
                 <div className="admin-stat-card">
-                    <div className="stat-icon orange"><DollarSign size={22} /></div>
+                    <div className="stat-icon orange"><IndianRupee size={22} /></div>
                     <div className="stat-info">
                         <h3>{formatCurrency(totalRevenue)}</h3>
                         <p>Total Price</p>

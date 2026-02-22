@@ -145,6 +145,66 @@ export async function deleteFromImageKit(env, fileId) {
 }
 
 /**
+ * Delete file from ImageKit by path (e.g., /blogs/featured/image.jpg)
+ */
+export async function deleteFromImageKitByPath(env, filePath) {
+    const privateKey = env.IMAGEKIT_PRIVATE_KEY;
+
+    if (!privateKey) {
+        throw new Error('ImageKit private key not configured');
+    }
+
+    const auth = btoa(`${privateKey}:`);
+
+    // Fix path: leading slash required
+    const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+
+    const response = await fetch('https://api.imagekit.io/v1/filesBatch/deleteByPaths', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filePaths: [cleanPath] })
+    });
+
+    if (!response.ok && response.status !== 404) {
+        const error = await response.text();
+        throw new Error(`ImageKit delete by path failed: ${error}`);
+    }
+
+    return true;
+}
+
+/**
+ * Bulk delete files from ImageKit by paths
+ */
+export async function bulkDeleteFromImageKitByPaths(env, filePaths) {
+    const privateKey = env.IMAGEKIT_PRIVATE_KEY;
+
+    if (!privateKey || !filePaths || filePaths.length === 0) return true;
+
+    const auth = btoa(`${privateKey}:`);
+    const cleanPaths = filePaths.map(p => p.startsWith('/') ? p : `/${p}`);
+
+    const response = await fetch('https://api.imagekit.io/v1/filesBatch/deleteByPaths', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filePaths: cleanPaths })
+    });
+
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`ImageKit bulk delete by paths failed: ${error}`);
+    }
+
+    return true;
+}
+
+/**
  * Get ImageKit URL with transformations
  */
 export function getTransformedUrl(urlEndpoint, filePath, transformations = {}) {

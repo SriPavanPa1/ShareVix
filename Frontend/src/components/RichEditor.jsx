@@ -63,8 +63,8 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
       try {
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('owner_type', 'blog')
-        if (blogId) formData.append('owner_id', blogId)
+        formData.append('owner_type', ownerType)
+        if (currentOwnerId) formData.append('owner_id', currentOwnerId)
 
         const response = await mediaAPI.uploadInline(formData)
         const imageUrl = response.data?.url
@@ -99,8 +99,8 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
       try {
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('owner_type', 'blog')
-        if (blogId) formData.append('owner_id', blogId)
+        formData.append('owner_type', ownerType)
+        if (currentOwnerId) formData.append('owner_id', currentOwnerId)
 
         const response = await mediaAPI.uploadInline(formData)
         const videoUrl = response.data?.url

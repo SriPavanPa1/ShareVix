@@ -1,6 +1,6 @@
 import { errorResponse, successResponse } from '../utils/response.js';
 import { requireAdminOrAuthor, requireCreatorOrAdmin, requireAdmin } from '../middleware/roles.js';
-import { uploadToImageKit } from '../utils/imagekit.js';
+import { uploadToImageKit, deleteFromImageKit, deleteFromImageKitByPath } from '../utils/imagekit.js';
 
 /**
  * GET /api/blogs
@@ -218,11 +218,12 @@ export async function createBlogWithMedia(request, env, supabase, user) {
 
         // Handle featured image upload first
         let featuredImageUrl = null;
+        let resultFeatured = null;
         const featuredImage = formData.get('featured_image');
         if (featuredImage && featuredImage.name) {
             try {
-                const result = await uploadToImageKit(env, featuredImage, featuredImage.name, '/blogs/featured');
-                featuredImageUrl = result.url;
+                resultFeatured = await uploadToImageKit(env, featuredImage, featuredImage.name, '/blogs/featured');
+                featuredImageUrl = resultFeatured.url;
             } catch (err) {
                 console.error('Featured image upload error:', err);
             }
@@ -247,6 +248,22 @@ export async function createBlogWithMedia(request, env, supabase, user) {
             .single();
 
         if (blogError) return errorResponse(blogError.message);
+
+        // Register featured image in media_assets for unified cleanup
+        if (featuredImage && resultFeatured) {
+            await supabase.from('media_assets').insert([{
+                file_key: resultFeatured.fileId,
+                url: resultFeatured.url,
+                owner_type: 'blog',
+                owner_id: blog.id,
+                asset_type: 'image',
+                is_private: false,
+                created_at: new Date().toISOString()
+            }]);
+        }
+
+        // Associate any inline images that were uploaded without owner_id
+        await associateMediaFromContent(content, 'blog', blog.id, supabase);
 
         // Handle additional file uploads
         const files = formData.getAll('files');
@@ -458,12 +475,32 @@ export async function updateBlogWithMedia(request, env, supabase, user, blogId) 
 
         if (featuredImage && featuredImage.name) {
             try {
+                // Cleanup old featured image if it exists
+                if (blog.featured_image_url) {
+                    try {
+                        const urlObj = new URL(blog.featured_image_url);
+                        const endpoint = env.IMAGEKIT_URL_ENDPOINT || '';
+                        let path = urlObj.pathname;
+                        if (endpoint) {
+                            const endpointPath = new URL(endpoint).pathname;
+                            if (endpointPath && endpointPath !== '/' && path.startsWith(endpointPath)) {
+                                path = path.substring(endpointPath.length);
+                            }
+                        }
+                        await deleteFromImageKitByPath(env, path);
+                    } catch (e) {
+                        console.error('Featured image cleanup failed:', e);
+                    }
+                }
                 const result = await uploadToImageKit(env, featuredImage, featuredImage.name, '/blogs/featured');
                 featuredImageUrl = result.url;
             } catch (err) {
                 console.error('Featured image upload error:', err);
                 return errorResponse('Failed to upload featured image', 500);
             }
+        } else if (removeFeaturedImage && blog.featured_image_url) {
+            const path = new URL(blog.featured_image_url).pathname;
+            await deleteFromImageKitByPath(env, path).catch(() => { });
         }
 
         updates.featured_image_url = featuredImageUrl;
@@ -477,6 +514,24 @@ export async function updateBlogWithMedia(request, env, supabase, user, blogId) 
             .single();
 
         if (blogError) return errorResponse(blogError.message);
+
+        // Register new featured image in media_assets
+        if (featuredImage && featuredImage.name && resultFeatured) {
+            await supabase.from('media_assets').insert([{
+                file_key: resultFeatured.fileId,
+                url: resultFeatured.url,
+                owner_type: 'blog',
+                owner_id: blogId,
+                asset_type: 'image',
+                is_private: false,
+                created_at: new Date().toISOString()
+            }]);
+        }
+
+        // Associate any new inline images
+        if (content) {
+            await associateMediaFromContent(content, 'blog', blogId, supabase);
+        }
 
         // Get media assets for response
         const { data: media } = await supabase
@@ -514,13 +569,96 @@ export async function deleteBlog(request, env, supabase, user, blogId) {
     const accessError = requireCreatorOrAdmin(user, blog.author_id);
     if (accessError) return accessError;
 
+    // Hard delete: Clean up from ImageKit first (media assets)
+    const { data: mediaAssets } = await supabase
+        .from('media_assets')
+        .select('file_key')
+        .eq('owner_id', blogId)
+        .eq('owner_type', 'blog');
+
+    if (mediaAssets && mediaAssets.length > 0) {
+        for (const m of mediaAssets) {
+            if (m.file_key) {
+                await deleteFromImageKit(env, m.file_key).catch(e => console.error('ImageKit media cleanup error:', e));
+            }
+        }
+    }
+
+    // Cleanup featured image
+    if (blog.featured_image_url) {
+        // Fallback: Delete by path if media_assets was missing the record
+        try {
+            const urlObj = new URL(blog.featured_image_url);
+            const endpoint = env.IMAGEKIT_URL_ENDPOINT || '';
+            let path = urlObj.pathname;
+            if (endpoint) {
+                const endpointPath = new URL(endpoint).pathname;
+                if (endpointPath && endpointPath !== '/' && path.startsWith(endpointPath)) {
+                    path = path.substring(endpointPath.length);
+                }
+            }
+            await deleteFromImageKitByPath(env, path);
+        } catch (e) {
+            console.error('Blog featured image cleanup by path failed:', e);
+        }
+    }
+
+    // Delete associated media records from DB
+    await supabase
+        .from('media_assets')
+        .delete()
+        .eq('owner_id', blogId)
+        .eq('owner_type', 'blog');
+
     const { error } = await supabase
         .from('blogs')
         .delete()
         .eq('id', blogId);
 
     if (error) return errorResponse(error.message);
-    return successResponse(null, 'Blog deleted');
+    return successResponse(null, 'Blog and associated media permanently deleted');
+}
+
+/**
+ * Helper to extract ImageKit URLs from content and associate them with a resource
+ */
+async function associateMediaFromContent(content, ownerType, ownerId, supabase) {
+    if (!content) return;
+
+    // Regex to find ImageKit URLs in <img> src and <source> src
+    // Example: https://ik.imagekit.io/your_endpoint/tr:w-300/blogs/inline/image.jpg
+    const ikUrlPattern = /https:\/\/ik\.imagekit\.io\/[^"'> ]+/g;
+    const matches = content.match(ikUrlPattern);
+
+    if (matches && matches.length > 0) {
+        // Extract the base path (remove transformations and query params)
+        // ImageKit URLs with transformations look like: .../endpoint/tr:xx,yy/path/to/file
+        const baseUrls = matches.map(url => {
+            let baseUrl = url.split('?')[0]; // Remove query params
+            // If it contains /tr:, everything between the endpoint and the rest of the path is a transformation
+            if (baseUrl.includes('/tr:')) {
+                const parts = baseUrl.split('/');
+                const trIndex = parts.findIndex(p => p.startsWith('tr:'));
+                if (trIndex !== -1) {
+                    parts.splice(trIndex, 1); // Remove the transformation part
+                    baseUrl = parts.join('/');
+                }
+            }
+            return baseUrl;
+        });
+
+        const uniqueUrls = [...new Set(baseUrls)];
+
+        // Update all media assets that match these base URLs and are currently orphans
+        const { error } = await supabase
+            .from('media_assets')
+            .update({ owner_id: ownerId })
+            .eq('owner_type', ownerType)
+            .is('owner_id', null)
+            .in('url', uniqueUrls);
+
+        if (error) console.error('Media association error:', error);
+    }
 }
 
 /**

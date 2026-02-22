@@ -117,13 +117,13 @@ const BlogManagement = () => {
                         <p>Published</p>
                     </div>
                 </div>
-                <div className="admin-stat-card">
+                {/* <div className="admin-stat-card">
                     <div className="stat-icon orange"><Clock size={22} /></div>
                     <div className="stat-info">
                         <h3>{draftCount}</h3>
                         <p>Drafts</p>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Toolbar */}

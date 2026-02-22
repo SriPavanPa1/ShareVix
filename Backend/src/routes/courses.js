@@ -1,6 +1,6 @@
 import { errorResponse, successResponse } from '../utils/response.js';
 import { requireAdminOrInstructor, requireCreatorOrAdmin, requireAdmin } from '../middleware/roles.js';
-import { uploadToImageKit } from '../utils/imagekit.js';
+import { uploadToImageKit, deleteFromImageKit } from '../utils/imagekit.js';
 
 /**
  * GET /api/courses
@@ -463,6 +463,22 @@ export async function updateCourseWithMedia(request, env, supabase, user, course
 
         // Handle deletions first
         if (removeMediaIds.length > 0) {
+            // Get file keys for ImageKit cleanup
+            const { data: mediaToDelete } = await supabase
+                .from('media_assets')
+                .select('file_key')
+                .in('id', removeMediaIds)
+                .eq('owner_id', courseId)
+                .eq('owner_type', 'course');
+
+            if (mediaToDelete && mediaToDelete.length > 0) {
+                for (const m of mediaToDelete) {
+                    if (m.file_key) {
+                        await deleteFromImageKit(env, m.file_key).catch(e => console.error('ImageKit cleanup error:', e));
+                    }
+                }
+            }
+
             await supabase
                 .from('media_assets')
                 .delete()
@@ -486,6 +502,21 @@ export async function updateCourseWithMedia(request, env, supabase, user, course
 
                 // If adding a new image/video, replace existing ones
                 if (assetType === 'image' || assetType === 'video') {
+                    const { data: existing } = await supabase
+                        .from('media_assets')
+                        .select('file_key')
+                        .eq('owner_id', courseId)
+                        .eq('owner_type', 'course')
+                        .eq('asset_type', assetType);
+
+                    if (existing && existing.length > 0) {
+                        for (const m of existing) {
+                            if (m.file_key) {
+                                await deleteFromImageKit(env, m.file_key).catch(e => console.error('ImageKit cleanup error:', e));
+                            }
+                        }
+                    }
+
                     await supabase
                         .from('media_assets')
                         .delete()
@@ -560,14 +591,36 @@ export async function deleteCourse(request, env, supabase, user, courseId) {
     const accessError = requireCreatorOrAdmin(user, course.created_by);
     if (accessError) return accessError;
 
-    // Soft delete by setting is_active to false
+    // Hard delete: Clean up from ImageKit first
+    const { data: mediaAssets } = await supabase
+        .from('media_assets')
+        .select('file_key')
+        .eq('owner_id', courseId)
+        .eq('owner_type', 'course');
+
+    if (mediaAssets && mediaAssets.length > 0) {
+        for (const m of mediaAssets) {
+            if (m.file_key) {
+                await deleteFromImageKit(env, m.file_key).catch(e => console.error('ImageKit cleanup error:', e));
+            }
+        }
+    }
+
+    // Delete associated media records from DB
+    await supabase
+        .from('media_assets')
+        .delete()
+        .eq('owner_id', courseId)
+        .eq('owner_type', 'course');
+
+    // Hard delete the course
     const { error } = await supabase
         .from('courses')
-        .update({ is_active: false })
+        .delete()
         .eq('id', courseId);
 
     if (error) return errorResponse(error.message);
-    return successResponse(null, 'Course deleted');
+    return successResponse(null, 'Course and associated media permanently deleted');
 }
 
 /**
