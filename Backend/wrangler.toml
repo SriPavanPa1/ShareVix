@@ -1,4 +1,4 @@
-name = "hyderabad-traders-api"
+name = "share-vix-api"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
@@ -11,12 +11,12 @@ SUPABASE_ANON_KEY = "sb_secret_TWIc4aTTv2QexoGxal9KJA_Od2tjDy5"
 JWT_SECRET = "f389ae9a-c8c8-4584-a730-997d1d251e78"
 
 # ImageKit Configuration
-IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/your_id"
-IMAGEKIT_PUBLIC_KEY = "your-imagekit-public-key"
+IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/ygxmpojqx/"
+IMAGEKIT_PUBLIC_KEY = "public_hwVvgMjWSo1uUfOdtiQdp7DINB8="
 
 # For local development only
 # JWT_SECRET = "your-jwt-secret"
-# IMAGEKIT_PRIVATE_KEY = "your-imagekit-private-key"
+# IMAGEKIT_PRIVATE_KEY = "private_qHpitiq6YSHkx9Ex+mHoHyNZgVU="
 
 # For production, use secrets:
 # wrangler secret put JWT_SECRET
