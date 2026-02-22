@@ -1,0 +1,24 @@
+name = "hyderabad-traders-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Supabase Configuration
+SUPABASE_URL = "https://yemulystcsrulbmcnzop.supabase.co"
+SUPABASE_ANON_KEY = "sb_secret_TWIc4aTTv2QexoGxal9KJA_Od2tjDy5"
+
+# For local development only - REMOVE BEFORE PRODUCTION!
+JWT_SECRET = "f389ae9a-c8c8-4584-a730-997d1d251e78"
+
+# ImageKit Configuration
+IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/your_id"
+IMAGEKIT_PUBLIC_KEY = "your-imagekit-public-key"
+
+# For local development only
+# JWT_SECRET = "your-jwt-secret"
+# IMAGEKIT_PRIVATE_KEY = "your-imagekit-private-key"
+
+# For production, use secrets:
+# wrangler secret put JWT_SECRET
+# wrangler secret put IMAGEKIT_PRIVATE_KEY
+# wrangler secret put SUPABASE_ANON_KEY
