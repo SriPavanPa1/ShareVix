@@ -1,6 +1,6 @@
 import { errorResponse, successResponse } from '../utils/response.js';
 import { requireAdminOrInstructor, requireCreatorOrAdmin, requireAdmin } from '../middleware/roles.js';
-import { uploadToImageKit, deleteFromImageKit } from '../utils/imagekit.js';
+import { uploadToImageKit, deleteFromImageKit, extractImageKitUrlsFromContent, getRelativePathFromUrl, bulkDeleteFromImageKitByPaths } from '../utils/imagekit.js';
 
 /**
  * GET /api/courses
@@ -245,6 +245,9 @@ export async function createCourseWithMedia(request, env, supabase, user) {
 
         if (courseError) return errorResponse(courseError.message);
 
+        // Associate any inline images that were uploaded without owner_id
+        await associateMediaFromContent(description, 'course', course.id, supabase);
+
         // Handle file uploads
         const files = formData.getAll('files');
         const uploadedMedia = [];
@@ -461,6 +464,11 @@ export async function updateCourseWithMedia(request, env, supabase, user, course
 
         if (courseError) return errorResponse(courseError.message);
 
+        // Associate any new inline images in description
+        if (description) {
+            await associateMediaFromContent(description, 'course', courseId, supabase);
+        }
+
         // Handle deletions first
         if (removeMediaIds.length > 0) {
             // Get file keys for ImageKit cleanup
@@ -580,7 +588,7 @@ export async function updateCourseWithMedia(request, env, supabase, user, course
 export async function deleteCourse(request, env, supabase, user, courseId) {
     const { data: course } = await supabase
         .from('courses')
-        .select('created_by')
+        .select('*')
         .eq('id', courseId)
         .single();
 
@@ -591,7 +599,9 @@ export async function deleteCourse(request, env, supabase, user, courseId) {
     const accessError = requireCreatorOrAdmin(user, course.created_by);
     if (accessError) return accessError;
 
-    // Hard delete: Clean up from ImageKit first
+    // --- DOUBLE-LAYER CLEANUP ---
+
+    // Layer 1: DB-linked media_assets (Explicit registration)
     const { data: mediaAssets } = await supabase
         .from('media_assets')
         .select('file_key')
@@ -601,9 +611,24 @@ export async function deleteCourse(request, env, supabase, user, courseId) {
     if (mediaAssets && mediaAssets.length > 0) {
         for (const m of mediaAssets) {
             if (m.file_key) {
-                await deleteFromImageKit(env, m.file_key).catch(e => console.error('ImageKit cleanup error:', e));
+                await deleteFromImageKit(env, m.file_key).catch(e => console.error('ImageKit media cleanup error:', e));
             }
         }
+    }
+
+    // Layer 2: Content-scanned media (Orphans / Inline in description)
+    const pathsToCleanup = [];
+
+    if (course.description) {
+        const inlineUrls = extractImageKitUrlsFromContent(course.description);
+        for (const url of inlineUrls) {
+            const path = getRelativePathFromUrl(url, env);
+            if (path) pathsToCleanup.push(path);
+        }
+    }
+
+    if (pathsToCleanup.length > 0) {
+        await bulkDeleteFromImageKitByPaths(env, [...new Set(pathsToCleanup)]).catch(e => console.error('Bulk path cleanup error:', e));
     }
 
     // Delete associated media records from DB
@@ -621,6 +646,24 @@ export async function deleteCourse(request, env, supabase, user, courseId) {
 
     if (error) return errorResponse(error.message);
     return successResponse(null, 'Course and associated media permanently deleted');
+}
+
+/**
+ * Helper to extract ImageKit URLs from content and associate them with a resource
+ */
+async function associateMediaFromContent(content, ownerType, ownerId, supabase) {
+    const urls = extractImageKitUrlsFromContent(content);
+
+    if (urls.length > 0) {
+        const { error } = await supabase
+            .from('media_assets')
+            .update({ owner_id: ownerId })
+            .eq('owner_type', ownerType)
+            .is('owner_id', null)
+            .in('url', urls);
+
+        if (error) console.error('Media association error:', error);
+    }
 }
 
 /**

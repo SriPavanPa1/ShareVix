@@ -223,3 +223,54 @@ export function getTransformedUrl(urlEndpoint, filePath, transformations = {}) {
 
     return `${urlEndpoint}/${filePath}`;
 }
+/**
+ * Extract ImageKit URLs from HTML content (img src, video src, etc.)
+ * Returns unique base URLs (without transformations or query params)
+ */
+export function extractImageKitUrlsFromContent(content) {
+    if (!content) return [];
+
+    // Regex to find ImageKit URLs
+    const ikUrlPattern = /https:\/\/ik\.imagekit\.io\/[^"'> ]+/g;
+    const matches = content.match(ikUrlPattern);
+
+    if (!matches) return [];
+
+    const baseUrls = matches.map(url => {
+        let baseUrl = url.split('?')[0]; // Remove query params
+        // Remove transformations (tr:xx)
+        if (baseUrl.includes('/tr:')) {
+            const parts = baseUrl.split('/');
+            const trIndex = parts.findIndex(p => p.startsWith('tr:'));
+            if (trIndex !== -1) {
+                parts.splice(trIndex, 1);
+                baseUrl = parts.join('/');
+            }
+        }
+        return baseUrl;
+    });
+
+    return [...new Set(baseUrls)];
+}
+
+/**
+ * Get relative path from ImageKit URL for deletion
+ */
+export function getRelativePathFromUrl(url, env) {
+    try {
+        const urlObj = new URL(url);
+        const endpoint = env.IMAGEKIT_URL_ENDPOINT || '';
+        let path = urlObj.pathname;
+
+        if (endpoint) {
+            const endpointUrl = new URL(endpoint);
+            const endpointPath = endpointUrl.pathname;
+            if (endpointPath && endpointPath !== '/' && path.startsWith(endpointPath)) {
+                path = path.substring(endpointPath.length);
+            }
+        }
+        return path;
+    } catch (e) {
+        return null;
+    }
+}
