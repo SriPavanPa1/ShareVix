@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// Base API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787'
+// Base API configuration import.meta.env.VITE_API_URL ||
+const API_BASE_URL =  'http://localhost:8787'
 
 const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
@@ -87,6 +87,12 @@ export const blogAPI = {
     // Update blog
     update: (id, data) =>
         api.put(`/blogs/${id}`, data),
+
+    // Update blog with media (FormData)
+    updateWithMedia: (id, formData) =>
+        api.put(`/blogs/${id}/with-media`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        }),
 
     // Delete blog
     delete: (id) =>
@@ -185,7 +191,12 @@ export const mediaAPI = {
         }),
 
     delete: (id) =>
-        api.delete(`/media/${id}`)
+        api.delete(`/media/${id}`),
+
+    uploadInline: (formData) =>
+        api.post('/media/upload-inline', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
 }
 
 // ============ PAYMENT API ============

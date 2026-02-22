@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
+import { mediaAPI } from '../services/api'
 import {
   Bold,
   Italic,
@@ -19,11 +20,13 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   Copy,
-  Trash2
+  Loader
 } from 'lucide-react'
 import '../styles/RichEditor.css'
 
-const RichEditor = ({ content, onChange }) => {
+const RichEditor = ({ content, onChange, blogId }) => {
+  const [uploading, setUploading] = useState(false)
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -46,44 +49,74 @@ const RichEditor = ({ content, onChange }) => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = event.target.files[0]
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const src = e.target.result
-          if (editor) {
-            editor.chain().focus().setImage({ src }).run()
-          }
+      if (!file) return
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image size should be less than 10MB')
+        return
+      }
+
+      setUploading(true)
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('owner_type', 'blog')
+        if (blogId) formData.append('owner_id', blogId)
+
+        const response = await mediaAPI.uploadInline(formData)
+        const imageUrl = response.data?.url
+
+        if (imageUrl && editor) {
+          editor.chain().focus().setImage({ src: imageUrl }).run()
         }
-        reader.readAsDataURL(file)
+      } catch (err) {
+        console.error('Image upload failed:', err)
+        alert('Failed to upload image. Please try again.')
+      } finally {
+        setUploading(false)
       }
     }
     input.click()
-  }, [editor])
+  }, [editor, blogId])
 
   const handleVideoUpload = useCallback(() => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'video/*'
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = event.target.files[0]
-      if (file) {
-        // For now, we'll handle video as a placeholder
-        // In production, you'd upload to a server and get a URL
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          // Create a video element HTML
-          const videoHtml = `<div class="video-wrapper"><video width="100%" controls><source src="${e.target.result}" type="${file.type}"></video></div>`
-          if (editor) {
-            editor.chain().focus().insertContent(videoHtml).run()
-          }
+      if (!file) return
+
+      if (file.size > 100 * 1024 * 1024) {
+        alert('Video size should be less than 100MB')
+        return
+      }
+
+      setUploading(true)
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('owner_type', 'blog')
+        if (blogId) formData.append('owner_id', blogId)
+
+        const response = await mediaAPI.uploadInline(formData)
+        const videoUrl = response.data?.url
+
+        if (videoUrl && editor) {
+          const videoHtml = `<div class="video-wrapper"><video width="100%" controls><source src="${videoUrl}" type="${file.type}"></video></div>`
+          editor.chain().focus().insertContent(videoHtml).run()
         }
-        reader.readAsDataURL(file)
+      } catch (err) {
+        console.error('Video upload failed:', err)
+        alert('Failed to upload video. Please try again.')
+      } finally {
+        setUploading(false)
       }
     }
     input.click()
-  }, [editor])
+  }, [editor, blogId])
 
   const handleAddLink = useCallback(() => {
     const url = window.prompt('Enter the URL:')
@@ -105,6 +138,12 @@ const RichEditor = ({ content, onChange }) => {
 
   return (
     <div className="rich-editor">
+      {uploading && (
+        <div className="editor-upload-overlay">
+          <Loader size={24} className="spin-animation" />
+          <span>Uploading media...</span>
+        </div>
+      )}
       <div className="editor-toolbar">
         <div className="toolbar-group">
           <button
@@ -195,12 +234,14 @@ const RichEditor = ({ content, onChange }) => {
           <button
             onClick={handleImageUpload}
             title="Insert Image"
+            disabled={uploading}
           >
             <ImageIcon size={18} />
           </button>
           <button
             onClick={handleVideoUpload}
             title="Insert Video"
+            disabled={uploading}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="23 7 16 12 23 17 23 7"></polygon>
@@ -233,3 +274,4 @@ const RichEditor = ({ content, onChange }) => {
 }
 
 export default RichEditor
+

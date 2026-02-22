@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AdminLayout from '../components/Admin/AdminLayout'
 import { blogAPI } from '../services/api'
 import { Search, Plus, Edit3, Trash2, FileText, CheckCircle, Clock, AlertTriangle, X, Loader } from 'lucide-react'
 
 const BlogManagement = () => {
+    const navigate = useNavigate()
     const [blogs, setBlogs] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [filterCategory, setFilterCategory] = useState('all')
-    const [editingBlog, setEditingBlog] = useState(null)
     const [deletingBlog, setDeletingBlog] = useState(null)
-    const [editForm, setEditForm] = useState({})
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState(false)
     const [error, setError] = useState('')
@@ -58,37 +57,9 @@ const BlogManagement = () => {
     const draftCount = blogs.filter(b => !b.is_published).length
 
     const handleEdit = (blog) => {
-        setEditForm({
-            id: blog.id,
-            title: blog.title || '',
-            category: blog.category || '',
-            description: blog.description || '',
-            is_published: blog.is_published,
-            tags: blog.tags || []
-        })
-        setEditingBlog(blog)
+        navigate(`/admin/blog-edit/${blog.id}`)
     }
 
-    const handleSaveEdit = async () => {
-        setActionLoading(true)
-        try {
-            await blogAPI.update(editForm.id, {
-                title: editForm.title,
-                category: editForm.category,
-                description: editForm.description,
-                is_published: editForm.is_published
-            })
-            setSuccessMsg('Blog updated successfully')
-            setEditingBlog(null)
-            setEditForm({})
-            await fetchBlogs()
-            setTimeout(() => setSuccessMsg(''), 3000)
-        } catch (err) {
-            setError(err.message || 'Failed to update blog')
-        } finally {
-            setActionLoading(false)
-        }
-    }
 
     const handleDelete = async () => {
         setActionLoading(true)
@@ -234,70 +205,6 @@ const BlogManagement = () => {
                 </div>
             )}
 
-            {/* Edit Modal */}
-            {editingBlog && (
-                <div className="admin-modal-overlay" onClick={() => setEditingBlog(null)}>
-                    <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="admin-modal-header">
-                            <h2>Edit Blog Post</h2>
-                            <button className="admin-modal-close" onClick={() => setEditingBlog(null)}>
-                                <X size={18} />
-                            </button>
-                        </div>
-                        <div className="admin-modal-body">
-                            <div className="form-group">
-                                <label>Blog Title</label>
-                                <input
-                                    type="text"
-                                    value={editForm.title || ''}
-                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Category</label>
-                                    <select
-                                        value={editForm.category || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                    >
-                                        <option value="">Select Category</option>
-                                        <option value="Health & Fitness">Health & Fitness</option>
-                                        <option value="Medical">Medical</option>
-                                        <option value="Trading Tips">Trading Tips</option>
-                                        <option value="Crypto News">Crypto News</option>
-                                        <option value="Education">Education</option>
-                                        <option value="Market Analysis">Market Analysis</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Status</label>
-                                    <select
-                                        value={editForm.is_published ? 'published' : 'draft'}
-                                        onChange={(e) => setEditForm({ ...editForm, is_published: e.target.value === 'published' })}
-                                    >
-                                        <option value="published">Published</option>
-                                        <option value="draft">Draft</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Description</label>
-                                <textarea
-                                    value={editForm.description || ''}
-                                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                                    rows="3"
-                                />
-                            </div>
-                        </div>
-                        <div className="admin-modal-footer">
-                            <button className="btn-cancel" onClick={() => setEditingBlog(null)} disabled={actionLoading}>Cancel</button>
-                            <button className="btn-save" onClick={handleSaveEdit} disabled={actionLoading}>
-                                {actionLoading ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Delete Confirmation Modal */}
             {deletingBlog && (

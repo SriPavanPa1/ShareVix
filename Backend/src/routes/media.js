@@ -244,3 +244,63 @@ export async function deleteMedia(request, env, supabase, user, mediaId) {
     if (error) return errorResponse(error.message);
     return successResponse(null, 'Media deleted');
 }
+
+/**
+ * POST /api/media/upload-inline
+ * Upload a single file for inline use in RichEditor (images/videos in blog content)
+ * Returns the ImageKit URL for embedding
+ */
+export async function uploadInlineMedia(request, env, supabase, user) {
+    try {
+        const contentType = request.headers.get('Content-Type') || '';
+
+        if (!contentType.includes('multipart/form-data')) {
+            return errorResponse('Content-Type must be multipart/form-data', 400);
+        }
+
+        const formData = await request.formData();
+        const file = formData.get('file');
+        const ownerType = formData.get('owner_type') || 'blog';
+        const ownerId = formData.get('owner_id');
+
+        if (!file || !file.name) {
+            return errorResponse('File is required', 400);
+        }
+
+        // Determine asset type from mime
+        const mimeType = file.type || '';
+        let assetType = 'document';
+        if (mimeType.startsWith('image/')) assetType = 'image';
+        else if (mimeType.startsWith('video/')) assetType = 'video';
+
+        // Upload to ImageKit
+        const folder = '/blogs/inline';
+        const result = await uploadToImageKit(env, file, file.name, folder);
+
+        // Optionally record in media_assets if owner_id is provided
+        if (ownerId) {
+            await supabase
+                .from('media_assets')
+                .insert([{
+                    file_key: result.fileId,
+                    url: result.url,
+                    owner_type: ownerType,
+                    owner_id: ownerId,
+                    asset_type: assetType,
+                    is_private: false,
+                    created_at: new Date().toISOString()
+                }]);
+        }
+
+        return successResponse({
+            url: result.url,
+            fileId: result.fileId,
+            thumbnailUrl: result.thumbnailUrl,
+            asset_type: assetType
+        }, 'File uploaded');
+
+    } catch (error) {
+        console.error('Upload inline media error:', error);
+        return errorResponse(`Upload failed: ${error.message}`, 500);
+    }
+}

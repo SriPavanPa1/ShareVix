@@ -10,6 +10,7 @@ import Contact from './pages/Contact'
 import Login from './pages/Login'
 import CourseUpload from './pages/CourseUpload'
 import BlogUpload from './pages/BlogUpload'
+import BlogEdit from './pages/BlogEdit'
 import BlogManagement from './pages/BlogManagement'
 import CourseManagement from './pages/CourseManagement'
 
@@ -27,6 +28,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin/course-upload" element={<CourseUpload />} />
             <Route path="/admin/blog-upload" element={<BlogUpload />} />
+            <Route path="/admin/blog-edit/:id" element={<BlogEdit />} />
             <Route path="/admin/blog-management" element={<BlogManagement />} />
             <Route path="/admin/course-management" element={<CourseManagement />} />
           </Routes>

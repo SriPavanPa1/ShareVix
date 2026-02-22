@@ -16,7 +16,7 @@ IMAGEKIT_PUBLIC_KEY = "public_hwVvgMjWSo1uUfOdtiQdp7DINB8="
 
 # For local development only
 # JWT_SECRET = "your-jwt-secret"
-# IMAGEKIT_PRIVATE_KEY = "private_qHpitiq6YSHkx9Ex+mHoHyNZgVU="
+IMAGEKIT_PRIVATE_KEY = "private_qHpitiq6YSHkx9Ex+mHoHyNZgVU="
 
 # For production, use secrets:
 # wrangler secret put JWT_SECRET

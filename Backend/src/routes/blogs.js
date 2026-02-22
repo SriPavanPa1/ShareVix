@@ -268,6 +268,7 @@ export async function createBlogWithMedia(request, env, supabase, user) {
                     .from('media_assets')
                     .insert([{
                         file_key: result.fileId,
+                        url: result.url,
                         owner_type: 'blog',
                         owner_id: blog.id,
                         asset_type: assetType,
@@ -345,6 +346,7 @@ export async function uploadBlogMedia(request, env, supabase, user, blogId) {
                     .from('media_assets')
                     .insert([{
                         file_key: result.fileId,
+                        url: result.url,
                         owner_type: 'blog',
                         owner_id: blogId,
                         asset_type: assetType,
@@ -376,7 +378,7 @@ export async function uploadBlogMedia(request, env, supabase, user, blogId) {
 
 /**
  * PUT /api/blogs/:id
- * Update blog (admin or blog author)
+ * Update blog (admin or blog author) - JSON body
  */
 export async function updateBlog(request, env, supabase, user, blogId) {
     const { data: blog } = await supabase
@@ -404,6 +406,94 @@ export async function updateBlog(request, env, supabase, user, blogId) {
 
     if (error) return errorResponse(error.message);
     return successResponse(data, 'Blog updated');
+}
+
+/**
+ * PUT /api/blogs/:id/with-media
+ * Update blog with file uploads (multipart form-data)
+ */
+export async function updateBlogWithMedia(request, env, supabase, user, blogId) {
+    const { data: blog } = await supabase
+        .from('blogs')
+        .select('author_id, featured_image_url')
+        .eq('id', blogId)
+        .single();
+
+    if (!blog) {
+        return errorResponse('Blog not found', 404);
+    }
+
+    const accessError = requireCreatorOrAdmin(user, blog.author_id);
+    if (accessError) return accessError;
+
+    try {
+        const formData = await request.formData();
+
+        const title = formData.get('title');
+        const content = formData.get('content');
+        const isPublished = formData.get('is_published');
+        const category = formData.get('category');
+        const description = formData.get('description');
+        const tagsStr = formData.get('tags');
+        const removeFeaturedImage = formData.get('remove_featured_image') === 'true';
+
+        // Build update object with only provided fields
+        const updates = { updated_at: new Date().toISOString() };
+        if (title !== null) updates.title = title;
+        if (content !== null) updates.content = content;
+        if (isPublished !== null) updates.is_published = isPublished === 'true';
+        if (category !== null) updates.category = category || null;
+        if (description !== null) updates.description = description || null;
+        if (tagsStr !== null) {
+            updates.tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+        }
+
+        // Handle featured image
+        let featuredImageUrl = blog.featured_image_url;
+        const featuredImage = formData.get('featured_image');
+
+        if (removeFeaturedImage) {
+            featuredImageUrl = null;
+        }
+
+        if (featuredImage && featuredImage.name) {
+            try {
+                const result = await uploadToImageKit(env, featuredImage, featuredImage.name, '/blogs/featured');
+                featuredImageUrl = result.url;
+            } catch (err) {
+                console.error('Featured image upload error:', err);
+                return errorResponse('Failed to upload featured image', 500);
+            }
+        }
+
+        updates.featured_image_url = featuredImageUrl;
+
+        // Update blog
+        const { data: updatedBlog, error: blogError } = await supabase
+            .from('blogs')
+            .update(updates)
+            .eq('id', blogId)
+            .select()
+            .single();
+
+        if (blogError) return errorResponse(blogError.message);
+
+        // Get media assets for response
+        const { data: media } = await supabase
+            .from('media_assets')
+            .select('*')
+            .eq('owner_type', 'blog')
+            .eq('owner_id', blogId);
+
+        return successResponse({
+            ...updatedBlog,
+            media: media || []
+        }, 'Blog updated');
+
+    } catch (error) {
+        console.error('Update blog with media error:', error);
+        return errorResponse(`Failed to update blog: ${error.message}`, 500);
+    }
 }
 
 /**

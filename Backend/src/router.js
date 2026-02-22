@@ -154,6 +154,11 @@ export async function handleRequest(request, env, supabase) {
         const blogId = path.split('/')[3];
         return blogRoutes.updateBlog(request, env, supabase, user, blogId);
     }
+    // Update blog with file uploads (form-data)
+    if (path.match(new RegExp(`^/api/blogs/${UUID_PATTERN}/with-media$`)) && method === 'PUT') {
+        const blogId = path.split('/')[3];
+        return blogRoutes.updateBlogWithMedia(request, env, supabase, user, blogId);
+    }
     if (path.match(new RegExp(`^/api/blogs/${UUID_PATTERN}$`)) && method === 'DELETE') {
         const blogId = path.split('/')[3];
         return blogRoutes.deleteBlog(request, env, supabase, user, blogId);
@@ -179,6 +184,9 @@ export async function handleRequest(request, env, supabase) {
     }
     if (path === '/api/media/upload' && method === 'POST') {
         return mediaRoutes.uploadMedia(request, env, supabase, user);
+    }
+    if (path === '/api/media/upload-inline' && method === 'POST') {
+        return mediaRoutes.uploadInlineMedia(request, env, supabase, user);
     }
     if (path.match(new RegExp(`^/api/media/${UUID_PATTERN}$`)) && method === 'DELETE') {
         const mediaId = path.split('/')[3];
