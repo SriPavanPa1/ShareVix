@@ -1,0 +1,46 @@
+# Node.js
+node_modules/
+.env
+.env.*
+dist/
+build/
+coverage/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.sqlite
+*.local
+
+# Vite
+.vite/
+
+# Postman
+postman_collection.json
+
+# Cloudflare Wrangler
+.wrangler/
+
+# Ignore database migrations
+schema_migration.sql
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore test output
+*.test.js
+*.spec.js
+
+# Ignore config backups
+*.bak
+
+# Ignore temp files
+*.tmp
