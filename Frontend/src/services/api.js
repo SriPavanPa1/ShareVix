@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Base API configuration import.meta.env.VITE_API_URL ||
-const API_BASE_URL =  'http://localhost:8787'
+const API_BASE_URL = 'http://localhost:8787'
 
 const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
@@ -136,6 +136,12 @@ export const courseAPI = {
     // Update course
     update: (id, data) =>
         api.put(`/courses/${id}`, data),
+
+    // Update course with media (FormData)
+    updateWithMedia: (id, formData) =>
+        api.put(`/courses/${id}/with-media`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        }),
 
     // Delete course
     delete: (id) =>

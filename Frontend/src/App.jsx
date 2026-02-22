@@ -13,6 +13,8 @@ import BlogUpload from './pages/BlogUpload'
 import BlogEdit from './pages/BlogEdit'
 import BlogManagement from './pages/BlogManagement'
 import CourseManagement from './pages/CourseManagement'
+import CourseEdit from './pages/CourseEdit'
+import ProtectedRoute from './components/Auth/ProtectedRoute'
 
 function App() {
   return (
@@ -28,9 +30,10 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin/course-upload" element={<CourseUpload />} />
             <Route path="/admin/blog-upload" element={<BlogUpload />} />
-            <Route path="/admin/blog-edit/:id" element={<BlogEdit />} />
-            <Route path="/admin/blog-management" element={<BlogManagement />} />
-            <Route path="/admin/course-management" element={<CourseManagement />} />
+            <Route path="/admin/blog-edit/:id" element={<ProtectedRoute adminOnly><BlogEdit /></ProtectedRoute>} />
+            <Route path="/admin/blog-management" element={<ProtectedRoute adminOnly><BlogManagement /></ProtectedRoute>} />
+            <Route path="/admin/course-edit/:id" element={<ProtectedRoute adminOnly><CourseEdit /></ProtectedRoute>} />
+            <Route path="/admin/course-management" element={<ProtectedRoute adminOnly><CourseManagement /></ProtectedRoute>} />
           </Routes>
         </main>
         <Footer />

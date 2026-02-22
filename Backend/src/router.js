@@ -122,6 +122,11 @@ export async function handleRequest(request, env, supabase) {
         const courseId = path.split('/')[3];
         return courseRoutes.updateCourse(request, env, supabase, user, courseId);
     }
+    // Update course with file uploads (form-data)
+    if (path.match(new RegExp(`^/api/courses/${UUID_PATTERN}/with-media$`)) && method === 'PUT') {
+        const courseId = path.split('/')[3];
+        return courseRoutes.updateCourseWithMedia(request, env, supabase, user, courseId);
+    }
     if (path.match(new RegExp(`^/api/courses/${UUID_PATTERN}$`)) && method === 'DELETE') {
         const courseId = path.split('/')[3];
         return courseRoutes.deleteCourse(request, env, supabase, user, courseId);

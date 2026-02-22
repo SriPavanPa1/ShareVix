@@ -24,8 +24,9 @@ import {
 } from 'lucide-react'
 import '../styles/RichEditor.css'
 
-const RichEditor = ({ content, onChange, blogId }) => {
+const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) => {
   const [uploading, setUploading] = useState(false)
+  const currentOwnerId = ownerId || blogId // Support both prop names for compatibility
 
   const editor = useEditor({
     extensions: [
@@ -147,6 +148,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
       <div className="editor-toolbar">
         <div className="toolbar-group">
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
             disabled={!editor.can().chain().focus().toggleBold().run()}
             className={editor.isActive('bold') ? 'active' : ''}
@@ -155,6 +157,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <Bold size={18} />
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             disabled={!editor.can().chain().focus().toggleItalic().run()}
             className={editor.isActive('italic') ? 'active' : ''}
@@ -163,6 +166,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <Italic size={18} />
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             disabled={!editor.can().chain().focus().toggleUnderline().run()}
             className={editor.isActive('underline') ? 'active' : ''}
@@ -174,6 +178,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
 
         <div className="toolbar-group">
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={editor.isActive('heading', { level: 2 }) ? 'active' : ''}
             title="Heading 2"
@@ -181,6 +186,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <Heading2 size={18} />
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={editor.isActive('heading', { level: 3 }) ? 'active' : ''}
             title="Heading 3"
@@ -191,6 +197,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
 
         <div className="toolbar-group">
           <button
+            type="button"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             className={editor.isActive({ textAlign: 'left' }) ? 'active' : ''}
             title="Align Left"
@@ -198,6 +205,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <AlignLeft size={18} />
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             className={editor.isActive({ textAlign: 'center' }) ? 'active' : ''}
             title="Align Center"
@@ -205,6 +213,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <AlignCenter size={18} />
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             className={editor.isActive({ textAlign: 'right' }) ? 'active' : ''}
             title="Align Right"
@@ -215,6 +224,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
 
         <div className="toolbar-group">
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={editor.isActive('bulletList') ? 'active' : ''}
             title="Bullet List"
@@ -222,6 +232,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <List size={18} />
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={editor.isActive('orderedList') ? 'active' : ''}
             title="Ordered List"
@@ -232,6 +243,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
 
         <div className="toolbar-group">
           <button
+            type="button"
             onClick={handleImageUpload}
             title="Insert Image"
             disabled={uploading}
@@ -239,6 +251,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             <ImageIcon size={18} />
           </button>
           <button
+            type="button"
             onClick={handleVideoUpload}
             title="Insert Video"
             disabled={uploading}
@@ -249,6 +262,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
             </svg>
           </button>
           <button
+            type="button"
             onClick={handleAddLink}
             title="Add Link"
           >
@@ -258,6 +272,7 @@ const RichEditor = ({ content, onChange, blogId }) => {
 
         <div className="toolbar-group">
           <button
+            type="button"
             onClick={() => editor.chain().focus().clearNodes().run()}
             title="Clear Formatting"
           >

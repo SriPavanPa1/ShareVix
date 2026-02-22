@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AdminLayout from '../components/Admin/AdminLayout'
 import { courseAPI } from '../services/api'
 import { Search, Plus, Edit3, Trash2, BookOpen, Users, Star, DollarSign, AlertTriangle, X, CheckCircle, Loader } from 'lucide-react'
 
 const CourseManagement = () => {
+    const navigate = useNavigate()
     const [courses, setCourses] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [filterLevel, setFilterLevel] = useState('all')
-    const [editingCourse, setEditingCourse] = useState(null)
     const [deletingCourse, setDeletingCourse] = useState(null)
-    const [editForm, setEditForm] = useState({})
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState(false)
     const [error, setError] = useState('')
@@ -56,45 +55,7 @@ const CourseManagement = () => {
     const activeCount = courses.filter(c => c.is_active).length
     const totalRevenue = courses.reduce((sum, c) => sum + (c.price || 0), 0)
 
-    const handleEdit = (course) => {
-        setEditForm({
-            id: course.id,
-            title: course.title || '',
-            description: course.description || '',
-            instructor_name: course.instructor_name || '',
-            category: course.category || '',
-            level: course.level || 'Beginner',
-            price: course.price || 0,
-            duration: course.duration || '',
-            is_active: course.is_active
-        })
-        setEditingCourse(course)
-    }
 
-    const handleSaveEdit = async () => {
-        setActionLoading(true)
-        try {
-            await courseAPI.update(editForm.id, {
-                title: editForm.title,
-                description: editForm.description,
-                instructor_name: editForm.instructor_name,
-                category: editForm.category,
-                level: editForm.level,
-                price: Number(editForm.price),
-                duration: editForm.duration,
-                is_active: editForm.is_active
-            })
-            setSuccessMsg('Course updated successfully')
-            setEditingCourse(null)
-            setEditForm({})
-            await fetchCourses()
-            setTimeout(() => setSuccessMsg(''), 3000)
-        } catch (err) {
-            setError(err.message || 'Failed to update course')
-        } finally {
-            setActionLoading(false)
-        }
-    }
 
     const handleDelete = async () => {
         setActionLoading(true)
@@ -117,8 +78,14 @@ const CourseManagement = () => {
 
     const getImageUrl = (course) => {
         const imageMedia = course.media?.find(m => m.asset_type === 'image')
-        if (imageMedia) return `https://ik.imagekit.io/tr/${imageMedia.file_key}`
+        if (imageMedia) return imageMedia.url || `https://ik.imagekit.io/tr/${imageMedia.file_key}`
         return 'https://via.placeholder.com/60x40?text=No+Image'
+    }
+
+    const stripHtml = (html) => {
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
     }
 
     return (
@@ -222,7 +189,12 @@ const CourseManagement = () => {
                                     <td>
                                         <div className="table-course-info">
                                             <img src={getImageUrl(course)} alt={course.title} className="table-course-img" />
-                                            <span className="table-course-name">{course.title}</span>
+                                            <div className="table-course-details">
+                                                <span className="table-course-name">{course.title}</span>
+                                                <p className="table-course-desc">
+                                                    {stripHtml(course.description || '').substring(0, 60)}...
+                                                </p>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>{course.instructor_name || course.creator_name || 'N/A'}</td>
@@ -241,7 +213,7 @@ const CourseManagement = () => {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn edit" onClick={() => handleEdit(course)} title="Edit">
+                                            <button className="table-action-btn edit" onClick={() => navigate(`/admin/course-edit/${course.id}`)} title="Edit">
                                                 <Edit3 size={16} />
                                             </button>
                                             <button className="table-action-btn delete" onClick={() => setDeletingCourse(course)} title="Delete">
@@ -262,108 +234,7 @@ const CourseManagement = () => {
                 </div>
             )}
 
-            {/* Edit Modal */}
-            {editingCourse && (
-                <div className="admin-modal-overlay" onClick={() => setEditingCourse(null)}>
-                    <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="admin-modal-header">
-                            <h2>Edit Course</h2>
-                            <button className="admin-modal-close" onClick={() => setEditingCourse(null)}>
-                                <X size={18} />
-                            </button>
-                        </div>
-                        <div className="admin-modal-body">
-                            <div className="form-group">
-                                <label>Course Name</label>
-                                <input
-                                    type="text"
-                                    value={editForm.title || ''}
-                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Instructor</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.instructor_name || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, instructor_name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Category</label>
-                                    <select
-                                        value={editForm.category || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                    >
-                                        <option value="">Select Category</option>
-                                        <option value="Trading">Trading</option>
-                                        <option value="Investing">Investing</option>
-                                        <option value="Cryptocurrency">Cryptocurrency</option>
-                                        <option value="Market Fundamentals">Market Fundamentals</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Level</label>
-                                    <select
-                                        value={editForm.level || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, level: e.target.value })}
-                                    >
-                                        <option value="Beginner">Beginner</option>
-                                        <option value="Intermediate">Intermediate</option>
-                                        <option value="Advanced">Advanced</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Price (₹)</label>
-                                    <input
-                                        type="number"
-                                        value={editForm.price || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Duration</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.duration || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
-                                        placeholder="e.g., 40 hours"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Status</label>
-                                    <select
-                                        value={editForm.is_active ? 'active' : 'inactive'}
-                                        onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'active' })}
-                                    >
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Description</label>
-                                <textarea
-                                    value={editForm.description || ''}
-                                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                                    rows="3"
-                                />
-                            </div>
-                        </div>
-                        <div className="admin-modal-footer">
-                            <button className="btn-cancel" onClick={() => setEditingCourse(null)} disabled={actionLoading}>Cancel</button>
-                            <button className="btn-save" onClick={handleSaveEdit} disabled={actionLoading}>
-                                {actionLoading ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Delete Confirmation Modal */}
             {deletingCourse && (

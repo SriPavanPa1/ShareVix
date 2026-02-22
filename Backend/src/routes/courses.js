@@ -265,6 +265,7 @@ export async function createCourseWithMedia(request, env, supabase, user) {
                     .from('media_assets')
                     .insert([{
                         file_key: result.fileId,
+                        url: result.url,
                         owner_type: 'course',
                         owner_id: course.id,
                         asset_type: assetType,
@@ -373,7 +374,7 @@ export async function uploadCourseMedia(request, env, supabase, user, courseId) 
 
 /**
  * PUT /api/courses/:id
- * Update course (admin or course creator)
+ * Update course (admin or course creator) - JSON body
  */
 export async function updateCourse(request, env, supabase, user, courseId) {
     const { data: course } = await supabase
@@ -405,6 +406,140 @@ export async function updateCourse(request, env, supabase, user, courseId) {
 
     if (error) return errorResponse(error.message);
     return successResponse(data, 'Course updated');
+}
+
+/**
+ * PUT /api/courses/:id/with-media
+ * Update course with file uploads (multipart form-data)
+ */
+export async function updateCourseWithMedia(request, env, supabase, user, courseId) {
+    const { data: course } = await supabase
+        .from('courses')
+        .select('created_by')
+        .eq('id', courseId)
+        .single();
+
+    if (!course) {
+        return errorResponse('Course not found', 404);
+    }
+
+    const accessError = requireCreatorOrAdmin(user, course.created_by);
+    if (accessError) return accessError;
+
+    try {
+        const formData = await request.formData();
+
+        const title = formData.get('title');
+        const description = formData.get('description');
+        const price = formData.get('price');
+        const category = formData.get('category');
+        const level = formData.get('level');
+        const duration = formData.get('duration');
+        const instructorName = formData.get('instructor_name');
+        const isActive = formData.get('is_active');
+        const removeMediaIdsStr = formData.get('remove_media_ids') || '';
+        const removeMediaIds = removeMediaIdsStr ? removeMediaIdsStr.split(',').filter(Boolean) : [];
+
+        // Build update object with only provided fields
+        const updates = {};
+        if (title !== null) updates.title = title;
+        if (description !== null) updates.description = description;
+        if (price !== null) updates.price = parseFloat(price) || 0;
+        if (category !== null) updates.category = category || null;
+        if (level !== null) updates.level = level || 'Beginner';
+        if (duration !== null) updates.duration = duration || null;
+        if (instructorName !== null) updates.instructor_name = instructorName || null;
+        if (isActive !== null) updates.is_active = isActive === 'true';
+
+        // Update course
+        const { data: updatedCourse, error: courseError } = await supabase
+            .from('courses')
+            .update(updates)
+            .eq('id', courseId)
+            .select()
+            .single();
+
+        if (courseError) return errorResponse(courseError.message);
+
+        // Handle deletions first
+        if (removeMediaIds.length > 0) {
+            await supabase
+                .from('media_assets')
+                .delete()
+                .in('id', removeMediaIds)
+                .eq('owner_id', courseId)
+                .eq('owner_type', 'course');
+        }
+
+        // Handle file uploads (image, video, materials)
+        const files = formData.getAll('files');
+        const uploadedMedia = [];
+
+        for (const file of files) {
+            if (!file || !file.name) continue;
+
+            try {
+                const mimeType = file.type || '';
+                let assetType = 'document';
+                if (mimeType.startsWith('image/')) assetType = 'image';
+                else if (mimeType.startsWith('video/')) assetType = 'video';
+
+                // If adding a new image/video, replace existing ones
+                if (assetType === 'image' || assetType === 'video') {
+                    await supabase
+                        .from('media_assets')
+                        .delete()
+                        .eq('owner_id', courseId)
+                        .eq('owner_type', 'course')
+                        .eq('asset_type', assetType);
+                }
+
+                const folder = '/courses';
+                const result = await uploadToImageKit(env, file, file.name, folder);
+
+                const { data: mediaAsset, error: mediaError } = await supabase
+                    .from('media_assets')
+                    .insert([{
+                        file_key: result.fileId,
+                        url: result.url,
+                        owner_type: 'course',
+                        owner_id: courseId,
+                        asset_type: assetType,
+                        is_private: false,
+                        created_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (!mediaError) {
+                    uploadedMedia.push({
+                        ...mediaAsset,
+                        url: result.url,
+                        thumbnail_url: result.thumbnailUrl
+                    });
+                }
+            } catch (uploadError) {
+                console.error('File upload error:', uploadError);
+            }
+        }
+
+        // Get all media assets for response
+        const { data: media } = await supabase
+            .from('media_assets')
+            .select('*')
+            .eq('owner_type', 'course')
+            .eq('owner_id', courseId);
+
+        return successResponse({
+            ...updatedCourse,
+            media: media || [],
+            newUploads: uploadedMedia
+        }, 'Course updated');
+
+    } catch (error) {
+        console.error('Update course with media error:', error);
+        return errorResponse(`Failed to update course: ${error.message}`, 500);
+    }
 }
 
 /**

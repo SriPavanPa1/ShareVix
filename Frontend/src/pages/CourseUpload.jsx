@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import AdminLayout from '../components/Admin/AdminLayout'
 import { courseAPI } from '../services/api'
 import { Upload, X, Check, AlertCircle } from 'lucide-react'
+import RichEditor from '../components/RichEditor'
 import '../styles/CourseUpload.css'
 
 const CourseUpload = () => {
@@ -21,6 +22,9 @@ const CourseUpload = () => {
     courseVideo: null,
     courseMaterials: []
   })
+
+  // Add state for RichEditor content since we'll use it instead of textarea value
+  const [richContent, setRichContent] = useState('')
 
   const [previewImage, setPreviewImage] = useState(null)
   const [previewVideo, setPreviewVideo] = useState(null)
@@ -109,7 +113,7 @@ const CourseUpload = () => {
     setSuccess(false)
 
     try {
-      if (!formData.courseName || !formData.courseDescription || !formData.instructor) {
+      if (!formData.courseName || !richContent || !formData.instructor) {
         setError('Please fill in all required fields')
         setLoading(false)
         return
@@ -118,7 +122,7 @@ const CourseUpload = () => {
       // Build FormData for API call
       const apiFormData = new FormData()
       apiFormData.append('title', formData.courseName)
-      apiFormData.append('description', formData.courseDescription)
+      apiFormData.append('description', richContent)
       apiFormData.append('instructor_name', formData.instructor)
       apiFormData.append('category', formData.category || '')
       apiFormData.append('level', formData.level || 'Beginner')
@@ -154,6 +158,7 @@ const CourseUpload = () => {
       setPreviewImage(null)
       setPreviewVideo(null)
       setMaterials([])
+      setRichContent('')
 
       setTimeout(() => {
         setSuccess(false)
@@ -276,16 +281,11 @@ const CourseUpload = () => {
 
           <div className="form-group">
             <label htmlFor="courseDescription">Course Description *</label>
-            <textarea
-              id="courseDescription"
-              name="courseDescription"
-              value={formData.courseDescription}
-              onChange={handleInputChange}
-              placeholder="Describe your course content and learning objectives"
-              rows="5"
-              disabled={loading}
-              required
-            ></textarea>
+            <RichEditor
+              content={richContent}
+              onChange={setRichContent}
+              ownerType="course"
+            />
           </div>
         </div>
 
