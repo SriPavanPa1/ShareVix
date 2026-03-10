@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+// ...existing code...
 import { Calendar, User, Search, Loader, AlertCircle, ArrowRight, ChevronRight } from "lucide-react";
 import "../styles/Blog.css";
+import { blogAPI } from "../services/api";
 
 export default function Blogs() {
   const [blogs, setBlogs] = useState([]);
@@ -19,8 +20,8 @@ export default function Blogs() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get("https://hyderabadtrader.com/wp-json/wp/v2/posts?_embed&per_page=20");
-      setBlogs(response.data);
+      const response = await blogAPI.getAdminAll({ page: 1, limit: 50 });
+      setBlogs(response.data.blogs || []);
     } catch (err) {
       console.error("Error fetching blogs:", err);
       setError("Failed to load blog posts. Please try again later.");
@@ -30,6 +31,7 @@ export default function Blogs() {
   };
 
   const stripHtml = (html) => {
+    if (!html) return "";
     const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || "";
@@ -45,12 +47,13 @@ export default function Blogs() {
   };
 
   const getAuthorName = (post) => {
-    return post._embedded?.author?.[0]?.name || "Hyderabad Trader";
+    return post.author_name || post.users?.name || "Unknown";
   };
 
   const filteredBlogs = blogs.filter(post =>
-    post.title.rendered.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    stripHtml(post.excerpt.rendered).toLowerCase().includes(searchTerm.toLowerCase())
+    (post.title && typeof post.title === 'string' && post.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (post.description && typeof post.description === 'string' && post.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (post.content && typeof post.content === 'string' && stripHtml(post.content).toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (selectedPost) {
@@ -71,12 +74,11 @@ export default function Blogs() {
           <div className="container">
             <article className="single-post">
               <div className="post-header">
-                <h1 dangerouslySetInnerHTML={{ __html: selectedPost.title.rendered }} />
-                
+                <h1>{selectedPost.title}</h1>
                 <div className="post-meta-single">
                   <span className="meta-badge">
                     <Calendar size={16} />
-                    {formatDate(selectedPost.date)}
+                    {formatDate(selectedPost.created_at)}
                   </span>
                   <span className="meta-badge">
                     <User size={16} />
@@ -85,17 +87,17 @@ export default function Blogs() {
                 </div>
               </div>
 
-              {selectedPost._embedded?.["wp:featuredmedia"]?.[0]?.source_url && (
+              {selectedPost.featured_image_url && (
                 <div className="featured-image-wrapper">
                   <img 
-                    src={selectedPost._embedded["wp:featuredmedia"][0].source_url} 
-                    alt={selectedPost.title.rendered}
+                    src={selectedPost.featured_image_url} 
+                    alt={selectedPost.title}
                     className="featured-image"
                   />
                 </div>
               )}
 
-              <div className="post-content" dangerouslySetInnerHTML={{ __html: selectedPost.content.rendered }} />
+              <div className="post-content" dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
 
               <div className="post-footer">
                 <button 
@@ -167,10 +169,10 @@ export default function Blogs() {
               {filteredBlogs.map(post => (
                 <article key={post.id} className="blog-card">
                   <div className="blog-card-image">
-                    {post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ? (
+                    {post.featured_image_url ? (
                       <img
-                        src={post._embedded["wp:featuredmedia"][0].source_url}
-                        alt={stripHtml(post.title.rendered)}
+                        src={post.featured_image_url}
+                        alt={post.title}
                       />
                     ) : (
                       <div className="placeholder-image"></div>
@@ -182,7 +184,7 @@ export default function Blogs() {
                     <div className="blog-card-meta">
                       <span className="meta-item">
                         <Calendar size={14} />
-                        {formatDate(post.date)}
+                        {formatDate(post.created_at)}
                       </span>
                       <span className="meta-item">
                         <User size={14} />
@@ -190,10 +192,10 @@ export default function Blogs() {
                       </span>
                     </div>
 
-                    <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+                    <h2>{post.title}</h2>
 
                     <p className="blog-card-excerpt">
-                      {stripHtml(post.excerpt.rendered).substring(0, 120)}...
+                      {stripHtml(post.description || post.content).substring(0, 120)}...
                     </p>
 
                     <button 

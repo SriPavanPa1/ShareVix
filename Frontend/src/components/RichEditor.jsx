@@ -1,6 +1,8 @@
 import React, { useCallback, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import FontFamily from '@tiptap/extension-font-family';
+import {TextStyle} from '@tiptap/extension-text-style';
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
@@ -32,13 +34,11 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
     extensions: [
       StarterKit,
       Image,
-      Link.configure({
-        openOnClick: false,
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
+      Link.configure({ openOnClick: false }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Underline,
+      TextStyle,
+      FontFamily,
     ],
     content: content,
     onUpdate: ({ editor }) => {
@@ -174,6 +174,66 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
           >
             <UnderlineIcon size={18} />
           </button>
+          {/* Font Family Selection */}
+          <select
+            className="editor-font-family-select"
+            value={editor.getAttributes('fontFamily').fontFamily || ''}
+            onChange={e => editor.chain().focus().setFontFamily(e.target.value).run()}
+            title="Font Family"
+          >
+            <option value="">Default</option>
+            <option value="Arial">Arial</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Tahoma">Tahoma</option>
+            <option value="Trebuchet MS">Trebuchet MS</option>
+            <option value="Helvetica">Helvetica</option>
+            <option value="Comic Sans MS">Comic Sans MS</option>
+            <option value="Impact">Impact</option>
+            <option value="Lucida Console">Lucida Console</option>
+            <option value="Palatino">Palatino</option>
+            <option value="Garamond">Garamond</option>
+            <option value="Brush Script MT">Brush Script MT</option>
+            <option value="Monospace">Monospace</option>
+            <option value="Sans-serif">Sans-serif</option>
+            <option value="Serif">Serif</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="Cursive">Cursive</option>
+          </select>
+          {/* Font Size Selection */}
+          <select
+            className="editor-font-size-select"
+            value={editor.getAttributes('textStyle').fontSize || ''}
+            onChange={e => editor.chain().focus().setTextStyle({ fontSize: e.target.value }).run()}
+            title="Font Size"
+          >
+            <option value="">Default</option>
+            <option value="10px">10px</option>
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px">16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="28px">28px</option>
+            <option value="32px">32px</option>
+            <option value="36px">36px</option>
+            <option value="48px">48px</option>
+            <option value="64px">64px</option>
+            <option value="2em">2em</option>
+            <option value="120%">120%</option>
+          </select>
+          <input
+            className="editor-font-size-input"
+            value={editor.getAttributes('textStyle').fontSize || ''}
+            onChange={e => editor.chain().focus().setTextStyle({ fontSize: e.target.value }).run()}
+            placeholder="Custom size (e.g. 16px, 2em, 120%)"
+            title="Custom Font Size"
+            type="text"
+            style={{ width: '120px', marginLeft: '8px' }}
+          />
         </div>
 
         <div className="toolbar-group">
