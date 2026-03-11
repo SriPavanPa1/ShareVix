@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import FontFamily from '@tiptap/extension-font-family';
@@ -7,7 +7,73 @@ import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
+import { Extension } from '@tiptap/core'
+import BulletList from '@tiptap/extension-bullet-list'
 import { mediaAPI } from '../services/api'
+
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    }
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => {
+              const fontSizeRaw = element.style.fontSize;
+              if (fontSizeRaw) {
+                return fontSizeRaw.replace(/['"]+/g, '');
+              }
+              return null;
+            },
+            renderHTML: attributes => {
+              if (!attributes.fontSize) {
+                return {}
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`,
+              }
+            },
+          },
+        },
+      },
+    ]
+  },
+  addCommands() {
+    return {
+      setFontSize: fontSize => ({ chain }) => {
+        return chain().setMark('textStyle', { fontSize }).run()
+      },
+      unsetFontSize: () => ({ chain }) => {
+        return chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run()
+      },
+    }
+  },
+})
+
+const CustomBulletList = BulletList.extend({
+  addAttributes() {
+    return {
+      listStyleType: {
+        default: 'disc',
+        parseHTML: element => element.style.listStyleType || 'disc',
+        renderHTML: attributes => {
+          if (!attributes.listStyleType || attributes.listStyleType === 'disc') {
+            return { style: 'list-style-type: disc' }
+          }
+          return { style: `list-style-type: ${attributes.listStyleType}` }
+        },
+      },
+    }
+  },
+})
+
 import {
   Bold,
   Italic,
@@ -32,19 +98,100 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: false, // We use our custom extension instead
+      }),
+      CustomBulletList,
       Image,
       Link.configure({ openOnClick: false }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Underline,
       TextStyle,
       FontFamily,
+      FontSize,
     ],
     content: content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
   })
+
+  const [customFontSize, setCustomFontSize] = useState('');
+
+  // Listen for selection changes to update the active font size automatically
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleTransaction = () => {
+      const activeFontSize = editor.getAttributes('textStyle').fontSize || '';
+      setCustomFontSize(activeFontSize);
+    };
+
+    editor.on('transaction', handleTransaction);
+
+    return () => {
+      editor.off('transaction', handleTransaction);
+    };
+  }, [editor]);
+
+  const currentFontSize = customFontSize;
+
+  const applyCustomFontSize = useCallback(() => {
+    if (!editor) return;
+    if (customFontSize) {
+      editor.chain().focus().setFontSize(customFontSize).run();
+    } else {
+      editor.chain().focus().unsetFontSize().run();
+    }
+  }, [editor, customFontSize]);
+
+  const handleCustomFontSizeKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyCustomFontSize();
+    }
+  }, [applyCustomFontSize]);
+
+  // Font size constants and helpers
+  const FONT_SIZES = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px', '64px'];
+
+  const handleIncreaseFontSize = useCallback(() => {
+    if (!editor) return;
+    const currentSize = editor.getAttributes('textStyle').fontSize || '16px';
+    const pxValue = parseInt(currentSize);
+    if (!isNaN(pxValue)) {
+      const nextSize = `${pxValue + 2}px`;
+      setCustomFontSize(nextSize);
+      editor.chain().focus().setFontSize(nextSize).run();
+    } else {
+      const currentIndex = FONT_SIZES.indexOf(currentSize);
+      let nextSize = '18px'; // Default step up from 16px if unknown
+      if (currentIndex !== -1 && currentIndex < FONT_SIZES.length - 1) {
+        nextSize = FONT_SIZES[currentIndex + 1];
+      }
+      setCustomFontSize(nextSize);
+      editor.chain().focus().setFontSize(nextSize).run();
+    }
+  }, [editor]);
+
+  const handleDecreaseFontSize = useCallback(() => {
+    if (!editor) return;
+    const currentSize = editor.getAttributes('textStyle').fontSize || '16px';
+    const pxValue = parseInt(currentSize);
+    if (!isNaN(pxValue) && pxValue > 2) {
+      const prevSize = `${pxValue - 2}px`;
+      setCustomFontSize(prevSize);
+      editor.chain().focus().setFontSize(prevSize).run();
+    } else {
+      const currentIndex = FONT_SIZES.indexOf(currentSize);
+      let prevSize = '14px'; // Default step down from 16px if unknown
+      if (currentIndex > 0) {
+        prevSize = FONT_SIZES[currentIndex - 1];
+      }
+      setCustomFontSize(prevSize);
+      editor.chain().focus().setFontSize(prevSize).run();
+    }
+  }, [editor]);
 
   const handleImageUpload = useCallback(() => {
     const input = document.createElement('input')
@@ -82,42 +229,7 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
     input.click()
   }, [editor, blogId])
 
-  const handleVideoUpload = useCallback(() => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'video/*'
-    input.onchange = async (event) => {
-      const file = event.target.files[0]
-      if (!file) return
 
-      if (file.size > 100 * 1024 * 1024) {
-        alert('Video size should be less than 100MB')
-        return
-      }
-
-      setUploading(true)
-      try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('owner_type', ownerType)
-        if (currentOwnerId) formData.append('owner_id', currentOwnerId)
-
-        const response = await mediaAPI.uploadInline(formData)
-        const videoUrl = response.data?.url
-
-        if (videoUrl && editor) {
-          const videoHtml = `<div class="video-wrapper"><video width="100%" controls><source src="${videoUrl}" type="${file.type}"></video></div>`
-          editor.chain().focus().insertContent(videoHtml).run()
-        }
-      } catch (err) {
-        console.error('Video upload failed:', err)
-        alert('Failed to upload video. Please try again.')
-      } finally {
-        setUploading(false)
-      }
-    }
-    input.click()
-  }, [editor, blogId])
 
   const handleAddLink = useCallback(() => {
     const url = window.prompt('Enter the URL:')
@@ -177,7 +289,7 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
           {/* Font Family Selection */}
           <select
             className="editor-font-family-select"
-            value={editor.getAttributes('fontFamily').fontFamily || ''}
+            value={editor.getAttributes('textStyle').fontFamily || ''}
             onChange={e => editor.chain().focus().setFontFamily(e.target.value).run()}
             title="Font Family"
           >
@@ -205,35 +317,47 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
           {/* Font Size Selection */}
           <select
             className="editor-font-size-select"
-            value={editor.getAttributes('textStyle').fontSize || ''}
-            onChange={e => editor.chain().focus().setTextStyle({ fontSize: e.target.value }).run()}
+            value={currentFontSize}
+            onChange={e => editor.chain().focus().setFontSize(e.target.value).run()}
             title="Font Size"
           >
             <option value="">Default</option>
-            <option value="10px">10px</option>
-            <option value="12px">12px</option>
-            <option value="14px">14px</option>
-            <option value="16px">16px</option>
-            <option value="18px">18px</option>
-            <option value="20px">20px</option>
-            <option value="24px">24px</option>
-            <option value="28px">28px</option>
-            <option value="32px">32px</option>
-            <option value="36px">36px</option>
-            <option value="48px">48px</option>
-            <option value="64px">64px</option>
+            {FONT_SIZES.map(size => (
+               <option key={size} value={size}>{size}</option>
+            ))}
+            {!FONT_SIZES.includes(currentFontSize) && currentFontSize !== '' && (
+               <option value={currentFontSize}>{currentFontSize}</option>
+            )}
             <option value="2em">2em</option>
             <option value="120%">120%</option>
           </select>
           <input
             className="editor-font-size-input"
-            value={editor.getAttributes('textStyle').fontSize || ''}
-            onChange={e => editor.chain().focus().setTextStyle({ fontSize: e.target.value }).run()}
-            placeholder="Custom size (e.g. 16px, 2em, 120%)"
-            title="Custom Font Size"
+            value={customFontSize}
+            onChange={e => setCustomFontSize(e.target.value)}
+            onBlur={applyCustomFontSize}
+            onKeyDown={handleCustomFontSizeKeyDown}
+            placeholder="Custom size (e.g. 16px, 2em)"
+            title="Custom Font Size (Press Enter)"
             type="text"
             style={{ width: '120px', marginLeft: '8px' }}
           />
+          <button
+            type="button"
+            onClick={handleIncreaseFontSize}
+            title="Increase Font Size"
+            style={{ fontWeight: 'bold' }}
+          >
+            A+
+          </button>
+          <button
+            type="button"
+            onClick={handleDecreaseFontSize}
+            title="Decrease Font Size"
+            style={{ fontWeight: 'bold' }}
+          >
+            A-
+          </button>
         </div>
 
         <div className="toolbar-group">
@@ -283,14 +407,32 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
         </div>
 
         <div className="toolbar-group">
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={editor.isActive('bulletList') ? 'active' : ''}
-            title="Bullet List"
-          >
-            <List size={18} />
-          </button>
+          <div className="dropdown-container">
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              className={editor.isActive('bulletList') ? 'active' : ''}
+              title="Bullet List"
+            >
+              <List size={18} />
+            </button>
+            <select
+              className="editor-font-family-select"
+              value={editor.getAttributes('bulletList').listStyleType || 'disc'}
+              onChange={e => {
+                if (!editor.isActive('bulletList')) {
+                   editor.chain().focus().toggleBulletList().run();
+                }
+                editor.chain().focus().updateAttributes('bulletList', { listStyleType: e.target.value }).run();
+              }}
+              title="Bullet Style"
+              style={{ paddingLeft: '2px', paddingRight: '2px', marginLeft: '-4px', borderLeft: 'none', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, background: '#fff' }}
+            >
+              <option value="disc">●</option>
+              <option value="circle">○</option>
+              <option value="square">■</option>
+            </select>
+          </div>
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -309,17 +451,6 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
             disabled={uploading}
           >
             <ImageIcon size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={handleVideoUpload}
-            title="Insert Video"
-            disabled={uploading}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="23 7 16 12 23 17 23 7"></polygon>
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-            </svg>
           </button>
           <button
             type="button"
