@@ -114,6 +114,50 @@ const RichEditor = ({ content, onChange, blogId, ownerType = 'blog', ownerId }) 
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
+    editorProps: {
+      handlePaste: (view, event, slice) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        
+        for (const item of items) {
+          if (item.type.indexOf('image') === 0) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (!file) continue;
+
+            if (file.size > 10 * 1024 * 1024) {
+              alert('Image size should be less than 10MB');
+              return true; // handled
+            }
+
+            setUploading(true);
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('owner_type', ownerType);
+            if (currentOwnerId) formData.append('owner_id', currentOwnerId);
+
+            mediaAPI.uploadInline(formData)
+              .then(response => {
+                const imageUrl = response.data?.url;
+                if (imageUrl) {
+                  const { schema } = view.state;
+                  const node = schema.nodes.image.create({ src: imageUrl });
+                  const transaction = view.state.tr.replaceSelectionWith(node);
+                  view.dispatch(transaction);
+                }
+              })
+              .catch(err => {
+                console.error('Image paste upload failed:', err);
+                alert('Failed to upload pasted image. Please try again.');
+              })
+              .finally(() => {
+                setUploading(false);
+              });
+            return true; // handled
+          }
+        }
+        return false; // let tip tap handle normal paste
+      }
+    }
   })
 
   const [customFontSize, setCustomFontSize] = useState('');

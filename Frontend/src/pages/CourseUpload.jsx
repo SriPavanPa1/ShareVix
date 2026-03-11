@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AdminLayout from '../components/Admin/AdminLayout'
@@ -43,8 +43,10 @@ const CourseUpload = () => {
   }
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0]
-    if (file) {
+    // Determine if event is from File input or Clipboard paste
+    const file = e.type === 'paste' ? e.clipboardData?.files?.[0] : e.target.files?.[0];
+    
+    if (file && file.type.startsWith('image/')) {
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB')
         return
@@ -61,6 +63,23 @@ const CourseUpload = () => {
       setError('')
     }
   }
+
+  useEffect(() => {
+    const handleGlobalPaste = (e) => {
+      // Ignore paste events if we are typing inside an input or textarea that isn't focused on the page body
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.ProseMirror')) {
+         return;
+      }
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+        handleImageUpload(e);
+      }
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => {
+      window.removeEventListener('paste', handleGlobalPaste);
+    };
+  }, []);
 
   const handleVideoUpload = (e) => {
     const file = e.target.files[0]
