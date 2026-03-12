@@ -20,7 +20,7 @@ export default function Blogs() {
     try {
       setLoading(true);
       setError(null);
-      const response = await blogAPI.getAdminAll({ page: 1, limit: 50 });
+      const response = await blogAPI.getAll({ page: 1, limit: 50 });
       setBlogs(response.data.blogs || []);
     } catch (err) {
       console.error("Error fetching blogs:", err);
