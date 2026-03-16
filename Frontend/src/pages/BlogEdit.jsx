@@ -18,13 +18,12 @@ const BlogEdit = () => {
         blogDescription: '',
         blogContent: '',
         featuredImage: null,
-        tags: []
+        tags: 'Blogs'
     })
 
     const [existingFeaturedImage, setExistingFeaturedImage] = useState(null)
     const [previewImage, setPreviewImage] = useState(null)
     const [removeFeaturedImage, setRemoveFeaturedImage] = useState(false)
-    const [currentTag, setCurrentTag] = useState('')
     const [loading, setLoading] = useState(false)
     const [fetching, setFetching] = useState(true)
     const [success, setSuccess] = useState(false)
@@ -45,7 +44,7 @@ const BlogEdit = () => {
                     blogDescription: blog.description || '',
                     blogContent: blog.content || '',
                     featuredImage: null,
-                    tags: blog.tags || []
+                    tags: (blog.tags && blog.tags.length > 0) ? blog.tags[0] : 'Blogs'
                 })
 
                 setIsPublished(blog.is_published || false)
@@ -109,29 +108,6 @@ const BlogEdit = () => {
         setExistingFeaturedImage(null)
     }
 
-    const handleAddTag = () => {
-        if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
-            setFormData(prev => ({
-                ...prev,
-                tags: [...prev.tags, currentTag.trim()]
-            }))
-            setCurrentTag('')
-        }
-    }
-
-    const handleRemoveTag = (tagToRemove) => {
-        setFormData(prev => ({
-            ...prev,
-            tags: prev.tags.filter(tag => tag !== tagToRemove)
-        }))
-    }
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault()
-            handleAddTag()
-        }
-    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -158,7 +134,7 @@ const BlogEdit = () => {
             apiFormData.append('content', formData.blogContent)
             apiFormData.append('description', formData.blogDescription)
             apiFormData.append('category', formData.blogCategory || '')
-            apiFormData.append('tags', formData.tags.join(','))
+            apiFormData.append('tags', formData.tags)
             apiFormData.append('is_published', isPublished ? 'true' : 'false')
 
             if (formData.featuredImage) {
@@ -288,45 +264,18 @@ const BlogEdit = () => {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="tags">Tags</label>
-                        <div className="tag-input-wrapper">
-                            <div className="tag-input-field">
-                                <input
-                                    type="text"
-                                    id="tags"
-                                    value={currentTag}
-                                    onChange={(e) => setCurrentTag(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    placeholder="Add tags (press Enter)"
-                                    disabled={loading}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleAddTag}
-                                    className="add-tag-btn"
-                                    disabled={loading || !currentTag.trim()}
-                                >
-                                    Add Tag
-                                </button>
-                            </div>
-                            {formData.tags.length > 0 && (
-                                <div className="tags-display">
-                                    {formData.tags.map(tag => (
-                                        <span key={tag} className="tag-badge">
-                                            {tag}
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveTag(tag)}
-                                                className="tag-remove"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
+                            <label htmlFor="tags">Content Type</label>
+                            <select
+                                id="tags"
+                                name="tags"
+                                value={formData.tags}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                            >
+                                <option value="Blogs">Blogs</option>
+                                <option value="Reports">Reports</option>
+                            </select>
                         </div>
-                    </div>
                 </div>
 
                 <div className="form-section">

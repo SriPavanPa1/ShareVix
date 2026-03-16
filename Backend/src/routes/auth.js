@@ -220,3 +220,56 @@ export async function getCurrentUser(request, env, supabase, user) {
         return errorResponse('Failed to fetch user', 500);
     }
 }
+
+/**
+ * POST /api/auth/change-password
+ * Change the authenticated user's password
+ */
+export async function changePassword(request, env, supabase, user) {
+    try {
+        const { oldPassword, newPassword } = await request.json();
+
+        if (!oldPassword || !newPassword) {
+            return errorResponse('Old password and new password are required', 400);
+        }
+
+        if (newPassword.length < 8) {
+            return errorResponse('New password must be at least 8 characters', 400);
+        }
+
+        // Fetch current password hash
+        const { data: userData, error: fetchError } = await supabase
+            .from('users')
+            .select('password_hash')
+            .eq('id', user.userId)
+            .single();
+
+        if (fetchError || !userData) {
+            return errorResponse('User not found', 404);
+        }
+
+        // Verify old password
+        const isValid = await comparePassword(oldPassword, userData.password_hash);
+        if (!isValid) {
+            return errorResponse('Current password is incorrect', 401);
+        }
+
+        // Hash and save new password
+        const newHash = await hashPassword(newPassword);
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password_hash: newHash, updated_at: new Date().toISOString() })
+            .eq('id', user.userId);
+
+        if (updateError) {
+            return errorResponse('Failed to update password', 500);
+        }
+
+        return successResponse(null, 'Password changed successfully');
+
+    } catch (error) {
+        console.error('Change password error:', error);
+        return errorResponse(`Failed to change password: ${error.message}`, 500);
+    }
+}
+

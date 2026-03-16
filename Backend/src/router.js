@@ -78,6 +78,9 @@ export async function handleRequest(request, env, supabase) {
     if (path === '/api/auth/me' && method === 'GET') {
         return authRoutes.getCurrentUser(request, env, supabase, user);
     }
+    if (path === '/api/auth/change-password' && method === 'POST') {
+        return authRoutes.changePassword(request, env, supabase, user);
+    }
 
     // --- Users ---
     if (path === '/api/users' && method === 'GET') {

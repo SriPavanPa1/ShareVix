@@ -100,7 +100,7 @@ function SignUp({ onSwitchToLogin }) {
       <div className="auth-card auth-card-large">
         <div className="auth-header">
           <h1>Create Account</h1>
-          <p>Join Hyderabad Trader and start your trading journey</p>
+          <p>Join Share Vix and start your trading journey</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">

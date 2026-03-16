@@ -12,7 +12,8 @@ import {
     ChevronRight,
     AlertCircle,
     Menu,
-    X
+    X,
+    BarChart2
 } from 'lucide-react'
 import '../../styles/AdminLayout.css'
 
@@ -26,6 +27,16 @@ const adminNavItems = [
         label: 'Blog Management',
         path: '/admin/blog-management',
         icon: FileText
+    },
+    // {
+    //     label: 'Report Upload',
+    //     path: '/admin/blog-upload',
+    //     icon: Upload
+    // },
+    {
+        label: 'Report Management',
+        path: '/admin/report-management',
+        icon: BarChart2
     },
     {
         label: 'Course Upload',

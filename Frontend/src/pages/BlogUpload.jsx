@@ -16,11 +16,10 @@ const BlogUpload = () => {
     blogDescription: '',
     blogContent: '',
     featuredImage: null,
-    tags: []
+    tags: 'Blogs'
   })
 
   const [previewImage, setPreviewImage] = useState(null)
-  const [currentTag, setCurrentTag] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -80,29 +79,6 @@ const BlogUpload = () => {
     };
   }, []);
 
-  const handleAddTag = () => {
-    if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, currentTag.trim()]
-      }))
-      setCurrentTag('')
-    }
-  }
-
-  const handleRemoveTag = (tagToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }))
-  }
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleAddTag()
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -129,7 +105,7 @@ const BlogUpload = () => {
       apiFormData.append('content', formData.blogContent)
       apiFormData.append('description', formData.blogDescription)
       apiFormData.append('category', formData.blogCategory || '')
-      apiFormData.append('tags', formData.tags.join(','))
+      apiFormData.append('tags', formData.tags)
       apiFormData.append('is_published', 'true')
 
       if (formData.featuredImage) {
@@ -145,10 +121,9 @@ const BlogUpload = () => {
         blogDescription: '',
         blogContent: '',
         featuredImage: null,
-        tags: []
+        tags: 'Blogs'
       })
       setPreviewImage(null)
-      setCurrentTag('')
 
       setTimeout(() => {
         setSuccess(false)
@@ -233,44 +208,17 @@ const BlogUpload = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="tags">Tags</label>
-            <div className="tag-input-wrapper">
-              <div className="tag-input-field">
-                <input
-                  type="text"
-                  id="tags"
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Add tags (press Enter)"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddTag}
-                  className="add-tag-btn"
-                  disabled={loading || !currentTag.trim()}
-                >
-                  Add Tag
-                </button>
-              </div>
-              {formData.tags.length > 0 && (
-                <div className="tags-display">
-                  {formData.tags.map(tag => (
-                    <span key={tag} className="tag-badge">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="tag-remove"
-                      >
-                        <X size={14} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            <label htmlFor="tags">Content Type</label>
+            <select
+              id="tags"
+              name="tags"
+              value={formData.tags}
+              onChange={handleInputChange}
+              disabled={loading}
+            >
+              <option value="Blogs">Blogs</option>
+              <option value="Reports">Reports</option>
+            </select>
           </div>
         </div>
 
@@ -340,10 +288,9 @@ const BlogUpload = () => {
                 blogDescription: '',
                 blogContent: '',
                 featuredImage: null,
-                tags: []
+                tags: 'Blogs'
               })
               setPreviewImage(null)
-              setCurrentTag('')
             }}
           >
             Clear Form

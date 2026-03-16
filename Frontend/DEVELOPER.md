@@ -1,7 +1,7 @@
-# Hyderabad Trader - Developer Documentation
+# Share Vix - Developer Documentation
 
 ## Overview
-This project is a React-based landing page for "Hyderabad Trader", a premium stock market and options trading education platform. The design is inspired by modern 3D aesthetics, vibrant pink/red gradients, and sleek layouts.
+This project is a React-based landing page for "Share Vix", a premium stock market and options trading education platform. The design is inspired by modern 3D aesthetics, vibrant pink/red gradients, and sleek layouts.
 
 ## Technology Stack
 - **Framework**: React.js (via Vite)

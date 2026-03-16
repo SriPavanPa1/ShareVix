@@ -1,38 +1,36 @@
 import { useEffect, useState } from "react";
-// ...existing code...
 import { Calendar, User, Search, Loader, AlertCircle, ArrowRight, ChevronRight } from "lucide-react";
 import "../styles/Blog.css";
 import { blogAPI } from "../services/api";
 
-export default function Blogs() {
-  const [blogs, setBlogs] = useState([]);
+export default function Reports() {
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
 
   useEffect(() => {
-    fetchBlogs();
+    fetchReports();
   }, []);
 
-  const fetchBlogs = async () => {
+  const fetchReports = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await blogAPI.getAll({ page: 1, limit: 100 });
       const allBlogs = response.data.blogs || [];
-      // Filter to show only Blogs-tagged content (exclude Reports)
-      const blogsOnly = allBlogs.filter(post =>
-        !post.tags ||
-        post.tags.length === 0 ||
-        (Array.isArray(post.tags) && post.tags.some(t => t.toLowerCase() === 'blogs')) ||
-        (typeof post.tags === 'string' && post.tags.toLowerCase() === 'blogs')
+      // Filter by tags=Reports
+      const reportsOnly = allBlogs.filter(post =>
+        post.tags && (
+          (Array.isArray(post.tags) && post.tags.some(t => t.toLowerCase() === 'reports')) ||
+          (typeof post.tags === 'string' && post.tags.toLowerCase() === 'reports')
+        )
       );
-      setBlogs(blogsOnly);
+      setReports(reportsOnly);
     } catch (err) {
-      console.error("Error fetching blogs:", err);
-      setError("Failed to load blog posts. Please try again later.");
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -58,7 +56,7 @@ export default function Blogs() {
     return post.author_name || post.users?.name || "Unknown";
   };
 
-  const filteredBlogs = blogs.filter(post =>
+  const filteredReports = reports.filter(post =>
     (post.title && typeof post.title === 'string' && post.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (post.description && typeof post.description === 'string' && post.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (post.content && typeof post.content === 'string' && stripHtml(post.content).toLowerCase().includes(searchTerm.toLowerCase()))
@@ -69,11 +67,11 @@ export default function Blogs() {
       <div className="blog-page">
         <section className="single-post-hero">
           <div className="container">
-            <button 
+            <button
               className="back-btn"
               onClick={() => setSelectedPost(null)}
             >
-              <ChevronRight size={20} /> Back to All Articles
+              <ChevronRight size={20} /> Back to All Reports
             </button>
           </div>
         </section>
@@ -97,8 +95,8 @@ export default function Blogs() {
 
               {selectedPost.featured_image_url && (
                 <div className="featured-image-wrapper">
-                  <img 
-                    src={selectedPost.featured_image_url} 
+                  <img
+                    src={selectedPost.featured_image_url}
                     alt={selectedPost.title}
                     className="featured-image"
                   />
@@ -108,11 +106,11 @@ export default function Blogs() {
               <div className="post-content" dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
 
               <div className="post-footer">
-                <button 
+                <button
                   className="back-btn-bottom"
                   onClick={() => setSelectedPost(null)}
                 >
-                  <ChevronRight size={20} /> Back to Articles
+                  <ChevronRight size={20} /> Back to Reports
                 </button>
               </div>
             </article>
@@ -128,13 +126,13 @@ export default function Blogs() {
       {/* <section className="blog-hero">
         <div className="container">
           <div className="hero-content">
-            <h1>Trading Insights & Tips</h1>
-            <p>Stay updated with the latest trading strategies, market analysis, and expert advice</p>
+            <h1>Market Reports & Analysis</h1>
+            <p>In-depth research, market data, and expert reports to guide your trading decisions</p>
           </div>
         </div>
       </section> */}
 
-      {/* Search & Filter Section */}
+      {/* Search Section */}
       <section className="blog-controls-section">
         <div className="container">
           <div className="controls-wrapper">
@@ -142,7 +140,7 @@ export default function Blogs() {
               <Search size={20} />
               <input
                 type="text"
-                placeholder="Search articles..."
+                placeholder="Search reports..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
@@ -150,7 +148,7 @@ export default function Blogs() {
             </div>
 
             <div className="results-count">
-              {filteredBlogs.length} article{filteredBlogs.length !== 1 ? "s" : ""} found
+              {filteredReports.length} report{filteredReports.length !== 1 ? "s" : ""} found
             </div>
           </div>
         </div>
@@ -163,18 +161,18 @@ export default function Blogs() {
             <div className="error-banner">
               <AlertCircle size={20} />
               <p>{error}</p>
-              <button onClick={fetchBlogs} className="retry-btn">Retry</button>
+              <button onClick={fetchReports} className="retry-btn">Retry</button>
             </div>
           )}
 
           {loading ? (
             <div className="loading-state">
               <Loader size={48} className="spinner" />
-              <p>Loading articles...</p>
+              <p>Loading reports...</p>
             </div>
-          ) : filteredBlogs.length > 0 ? (
+          ) : filteredReports.length > 0 ? (
             <div className="blog-grid">
-              {filteredBlogs.map(post => (
+              {filteredReports.map(post => (
                 <article key={post.id} className="blog-card">
                   <div className="blog-card-image">
                     {post.featured_image_url ? (
@@ -206,11 +204,11 @@ export default function Blogs() {
                       {stripHtml(post.description || post.content).substring(0, 120)}...
                     </p>
 
-                    <button 
+                    <button
                       className="read-more-btn"
                       onClick={() => setSelectedPost(post)}
                     >
-                      Read Article
+                      Read Report
                       <ArrowRight size={16} />
                     </button>
                   </div>
@@ -219,10 +217,10 @@ export default function Blogs() {
             </div>
           ) : (
             <div className="no-results-state">
-              <div className="no-results-icon">🔍</div>
-              <h3>No articles found</h3>
+              <div className="no-results-icon">📊</div>
+              <h3>No reports found</h3>
               <p>Try adjusting your search terms</p>
-              <button 
+              <button
                 className="clear-search-btn"
                 onClick={() => setSearchTerm("")}
               >

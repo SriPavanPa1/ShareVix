@@ -4,7 +4,7 @@ const FAQ = () => {
     const [active, setActive] = useState(0)
 
     const faqs = [
-        { q: 'What is Hyderabad Trader\'s Trading?', a: 'Hyderabad Trader\'s Trading is a premium education platform for stock market and options traders.' },
+        { q: 'What is Share Vix\'s Trading?', a: 'Share Vix\'s Trading is a premium education platform for stock market and options traders.' },
         { q: 'Hyderabad Traders\'s trading programs are suitable for whom?', a: 'They are suitable for everyone from complete beginners to advanced traders.' },
         { q: 'What can I expect in the trading room?', a: 'Expect real-time analysis, live trades, and continuous learning support.' }
     ]
