@@ -13,7 +13,7 @@ const Navbar = () => {
                 <div className="logo-area">
                     <Link to="/">
                         <img src={logoImg} alt="Hyderabad Trader Logo" className="nav-logo" />
-                        <span className="logo-text">HYDERABAD TRADER</span>
+                        {/* <span className="logo-text">HYDERABAD TRADER</span> */}
                     </Link>
                 </div>
 
