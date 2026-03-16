@@ -25,11 +25,19 @@ const BlogManagement = () => {
             if (filterCategory !== 'all') params.category = filterCategory
 
             const response = await blogAPI.getAdminAll(params)
-            setBlogs(response.data.blogs || [])
+            // Filter to only show Blogs-tagged content (exclude reports)
+            const allBlogs = response.data.blogs || []
+            const blogsOnly = allBlogs.filter(b => 
+                !b.tags ||
+                b.tags.length === 0 ||
+                (Array.isArray(b.tags) && b.tags.some(t => t.toLowerCase() === 'blogs')) ||
+                (typeof b.tags === 'string' && b.tags.toLowerCase() === 'blogs')
+            )
+            setBlogs(blogsOnly)
             setPagination(prev => ({
                 ...prev,
-                total: response.data.pagination?.total || 0,
-                totalPages: response.data.pagination?.totalPages || 1
+                total: blogsOnly.length,
+                totalPages: Math.ceil(blogsOnly.length / 50) || 1
             }))
         } catch (err) {
             setError(err.message || 'Failed to load blogs')
