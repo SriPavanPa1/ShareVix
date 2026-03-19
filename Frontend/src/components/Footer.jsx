@@ -16,7 +16,8 @@ const Footer = () => {
                             <ul>
                                 <li><Link to="/">Home</Link></li>
                                 {/* <li><Link to="/courses">Courses</Link></li> */}
-                                <li><Link to="/blog">Blog</Link></li>
+                                <li><Link to="/blog">Blogs</Link></li>
+                                <li><Link to="/reports">Reports</Link></li>
                                 {/* <li><Link to="/membership">Join The Membership</Link></li> */}
                                 <li><Link to="/contact">Contact Us</Link></li>
                             </ul>
@@ -24,8 +25,8 @@ const Footer = () => {
                         <div className="link-group">
                             <h4>Legal</h4>
                             <ul>
-                                <li><a href="#">Privacy Policy</a></li>
-                                <li><a href="#">Terms of Service</a></li>
+                                <li><Link to="/privacy">Privacy Policy</Link></li>
+                                <li><Link to="/terms">Terms of Service</Link></li>
                             </ul>
                         </div>
                     </div>

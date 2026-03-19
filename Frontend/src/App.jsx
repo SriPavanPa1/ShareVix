@@ -9,6 +9,8 @@ import Blog from './pages/Blog'
 import Reports from './pages/Reports'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
+import Privacy from './pages/Privacy'
+import TermsOfService from './pages/TermsOfService'
 import CourseUpload from './pages/CourseUpload'
 import BlogUpload from './pages/BlogUpload'
 import BlogEdit from './pages/BlogEdit'
@@ -31,6 +33,8 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/admin/course-upload" element={<CourseUpload />} />
             <Route path="/admin/blog-upload" element={<BlogUpload />} />
             <Route path="/admin/blog-edit/:id" element={<ProtectedRoute adminOnly><BlogEdit /></ProtectedRoute>} />
