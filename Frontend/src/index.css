@@ -1120,17 +1120,17 @@ ul {
 .footer {
   background: var(--secondary);
   color: white;
-  padding: 48px 0 24px;
+  padding: 24px 0 12px;
 }
 
 .footer-content {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .footer-brand h2 {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .footer-brand p {
@@ -1139,16 +1139,16 @@ ul {
 
 .footer-links {
   display: flex;
-  gap: 48px;
+  gap: 64px;
 }
 
 .link-group h4 {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   font-weight: 600;
 }
 
 .link-group ul li {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .link-group ul li a:hover {
@@ -1157,7 +1157,7 @@ ul {
 
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  padding-top: 20px;
+  padding-top: 16px;
   text-align: center;
   opacity: 0.6;
   font-size: 0.9rem;
