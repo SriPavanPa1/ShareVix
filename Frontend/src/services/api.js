@@ -28,11 +28,12 @@ api.interceptors.response.use(
     (error) => {
         const message = error.response?.data?.error || error.message || 'Something went wrong'
 
-        // Auto logout on 401
+        // Auto logout on 401 (clear auth state)
+        // NOTE: We avoid forcing a full page redirect, since that can cause "Not Found"/404
+        // responses on SPAs when the server isn't configured for client-side routing.
         if (error.response?.status === 401) {
             localStorage.removeItem('user')
             localStorage.removeItem('authToken')
-            window.location.href = '/login'
         }
 
         return Promise.reject({ message, status: error.response?.status })

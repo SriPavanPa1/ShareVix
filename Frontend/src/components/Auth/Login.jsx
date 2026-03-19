@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, Loader } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import '../../styles/Auth.css'
 
 function Login({ onSwitchToSignUp, onSwitchToForgotPassword }) {
+  const navigate = useNavigate()
   const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
@@ -52,9 +54,9 @@ function Login({ onSwitchToSignUp, onSwitchToForgotPassword }) {
         // Reset form
         setFormData({ email: '', password: '' })
 
-        // Redirect after success
+        // Redirect after success (client-side navigation)
         setTimeout(() => {
-          window.location.href = '/'
+          navigate('/', { replace: true })
         }, 1000)
       } else {
         setError(result.error || 'Login failed. Please try again.')
