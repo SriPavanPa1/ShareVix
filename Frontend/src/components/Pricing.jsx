@@ -43,7 +43,7 @@ const Pricing = () => {
                 <div className="pricing-grid">
                     {plans.map((plan, index) => (
                         <div className={`pricing-card ${plan.popular ? 'popular' : ''}`} key={index}>
-                            {plan.popular && <div className="popular-tag">MOST POPULAR</div>}
+                            {plan.popular && <div className="popular-tag">Most Popular</div>}
                             <h3>{plan.name}</h3>
                             <div className="price">
                                 <span className="currency">₹</span>

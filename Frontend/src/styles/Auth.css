@@ -113,7 +113,7 @@
   font-weight: 700;
   color: var(--text-main);
   margin-bottom: 8px;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.5px;
 }
 
@@ -553,7 +553,7 @@
   font-weight: 600;
   color: var(--text-main);
   margin-bottom: 8px;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.5px;
 }
 
