@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, LogOut, KeyRound, User } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import logoImg from '../assets/logo.png'
+import logoImg from '../assets/logo_copy.png'
 
 const Navbar = () => {
     const { user, isAdmin, logout } = useAuth()
@@ -65,6 +65,10 @@ const Navbar = () => {
                         <Link to="/">
                             <img src={logoImg} alt="Share Vix Logo" className="nav-logo" />
                         </Link>
+                        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0' }}>
+                            <span className="logo-text">SHARE</span>
+                            <span className="logo-text-vix">VIX</span>
+                        </Link>
                     </div>
 
                     <ul className="nav-links">
@@ -105,11 +109,11 @@ const Navbar = () => {
                         {user ? (
                             <div className="profile-dropdown-wrapper" ref={profileRef}>
                                 <button
-                                    className="profile-avatar-btn"
+                                    className="profile-menu-btn"
                                     onClick={() => setProfileOpen(prev => !prev)}
                                     aria-label="Profile menu"
                                 >
-                                    <img src={logoImg} alt="Profile" className="profile-avatar-img" />
+                                    <User size={24} />
                                 </button>
 
                                 {profileOpen && (
