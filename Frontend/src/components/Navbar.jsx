@@ -66,8 +66,8 @@ const Navbar = () => {
                             <img src={logoImg} alt="Share Vix Logo" className="nav-logo" />
                         </Link>
                         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0' }}>
-                            <span className="logo-text">SHARE</span>
-                            <span className="logo-text-vix">VIX</span>
+                            <span className="logo-text">Share</span>
+                            <span className="logo-text-vix">Vix</span>
                         </Link>
                     </div>
 
