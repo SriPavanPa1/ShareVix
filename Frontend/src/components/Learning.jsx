@@ -12,7 +12,7 @@ const Learning = () => {
     return (
         <section className="learning section-padding">
             <div className="container">
-                <h2 className="section-title">What you will Learn on the <span>Membership</span></h2>
+                <h2 className="section-title">What you will Learn <span>Here</span></h2>
 
                 <div className="learning-grid">
                     {topics.map((topic, index) => (
@@ -28,7 +28,7 @@ const Learning = () => {
 
                 <div className="trust-bubble">
                     <div className="avatar-pile">
-                        <span>+5000 students trust Hyderabad Traders Trading</span>
+                        <span>+500 students trust Hyderabad Traders Trading</span>
                     </div>
                 </div>
             </div>
