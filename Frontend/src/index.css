@@ -315,6 +315,7 @@ ul {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -469,7 +470,7 @@ ul {
 .cp-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -484,7 +485,7 @@ ul {
   border-radius: 20px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   animation: slideUp 0.25s ease;
   overflow: hidden;
 }
@@ -518,7 +519,10 @@ ul {
   transition: all 0.2s;
 }
 
-.cp-modal-close:hover { background: #e2e8f0; color: #0f172a; }
+.cp-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
 
 .cp-modal-body {
   padding: 22px 24px;
@@ -552,7 +556,7 @@ ul {
 
 .cp-form-group input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .cp-form-actions {
@@ -574,7 +578,9 @@ ul {
   transition: all 0.2s;
 }
 
-.cp-btn-cancel:hover { background: #f1f5f9; }
+.cp-btn-cancel:hover {
+  background: #f1f5f9;
+}
 
 .cp-btn-submit {
   flex: 1;
@@ -589,8 +595,16 @@ ul {
   transition: all 0.2s;
 }
 
-.cp-btn-submit:hover { box-shadow: 0 4px 14px rgba(37,99,235,0.35); transform: translateY(-1px); }
-.cp-btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.cp-btn-submit:hover {
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+.cp-btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .cp-alert {
   padding: 10px 14px;
@@ -599,8 +613,15 @@ ul {
   font-weight: 500;
 }
 
-.cp-alert-error { background: #fee2e2; color: #b91c1c; }
-.cp-alert-success { background: #d1fae5; color: #065f46; }
+.cp-alert-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.cp-alert-success {
+  background: #d1fae5;
+  color: #065f46;
+}
 
 /* Hero */
 .hero {
@@ -636,19 +657,20 @@ ul {
   align-items: center;
   z-index: 1;
   width: 100%;
+  gap: 40px;
 }
 
 .hero-text {
-  flex: 1;
-  max-width: 600px;
+  flex: 1.2;
+  max-width: 650px;
 }
 
 .hero-text h1 {
-  font-size: 4.8rem;
-  line-height: 1.1;
+  font-size: 3.8rem;
+  line-height: 1.2;
   margin-bottom: 24px;
   font-weight: 800;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
 }
 
 .hero-text p {

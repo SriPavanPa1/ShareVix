@@ -7,7 +7,8 @@ const Hero = () => {
             <div className="container hero-content">
                 <div className="hero-text">
                     <h1>
-                        Beyond Basics : <span style={{ color: 'var(--accent-green)' }}>Pure</span> <span style={{ color: 'var(--primary)' }}>Technical Mastery.</span>
+                        Beyond Basics : <br />
+                        <span style={{ color: 'var(--accent-green)' }}>Pure</span> <span style={{ color: 'var(--primary)' }}>Technical Mastery.</span>
                     </h1>
                     <p>Master the market with Hyderabad's expert traders. From basics to advanced institutional strategies.</p>
                     {/* <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
