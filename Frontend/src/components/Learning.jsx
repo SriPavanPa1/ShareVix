@@ -26,11 +26,11 @@ const Learning = () => {
                     ))}
                 </div>
 
-                <div className="trust-bubble">
+                {/* <div className="trust-bubble">
                     <div className="avatar-pile">
                         <span>+500 students trust Hyderabad Traders Trading</span>
                     </div>
-                </div>
+                </div> */}
             </div>
         </section>
     )

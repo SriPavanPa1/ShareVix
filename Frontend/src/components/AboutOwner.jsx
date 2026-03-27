@@ -13,7 +13,7 @@ const AboutOwner = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     maxWidth: '900px',
-                    margin: '3rem auto 0',
+                    margin: '1rem auto 0',
                     padding: '3rem 2rem',
                     backgroundColor: '#fff',
                     borderRadius: '16px',

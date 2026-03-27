@@ -7,7 +7,7 @@ const Footer = () => {
             <div className="container">
                 <div className="footer-content">
                     <div className="footer-brand">
-                        <h2>Share Vix</h2>
+                        <h2>ShareVix</h2>
                         <p>Empowering traders with knowledge and strategies.</p>
                     </div>
                     <div className="footer-links">
