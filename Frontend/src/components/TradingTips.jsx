@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { blogAPI } from '../services/api';
 import iconsPack from '../assets/icons.png';
-import { Calendar, User, ChevronRight, ArrowRight } from "lucide-react";
+import { Calendar, User, ChevronRight } from "lucide-react";
 import "../styles/Blog.css";
+import "../styles/TradingTips.css";
 
 const TradingTips = () => {
     const [tips, setTips] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTip, setSelectedTip] = useState(null);
-    const navigate = useNavigate();
+    const [selectedDate, setSelectedDate] = useState('');
+    const sliderRef = useRef(null);
 
     useEffect(() => {
         const fetchTips = async () => {
@@ -24,8 +26,8 @@ const TradingTips = () => {
                      (Array.isArray(post.tags) && post.tags.some(t => t.toLowerCase() === 'blogs')) ||
                      (typeof post.tags === 'string' && post.tags.toLowerCase() === 'blogs'))
                 );
-                // Get the latest 4 tips
-                setTips(tradingTips.slice(0, 4));
+                
+                setTips(tradingTips);
             } catch (error) {
                 console.error("Error fetching trading tips:", error);
             } finally {
@@ -61,9 +63,14 @@ const TradingTips = () => {
         return null;
     }
 
+    // Filter by selected date
+    const filteredTips = selectedDate 
+        ? tips.filter(t => new Date(t.created_at).toISOString().split('T')[0] === selectedDate)
+        : tips;
+
     if (selectedTip) {
         return (
-            <section className="learning section-padding" style={{ backgroundColor: '#f8f9fa' }}>
+            <section className="learning section-padding tips-section">
                 <div className="blog-page" style={{ padding: 0 }}>
                     <section className="single-post-hero" style={{ padding: '20px 0', minHeight: 'auto' }}>
                         <div className="container">
@@ -94,11 +101,12 @@ const TradingTips = () => {
                                 </div>
 
                                 {selectedTip.featured_image_url && (
-                                    <div className="featured-image-wrapper">
+                                    <div className="featured-image-wrapper" style={{ height: '400px', backgroundColor: '#f0f0f0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                         <img 
                                             src={selectedTip.featured_image_url} 
                                             alt={selectedTip.title}
                                             className="featured-image"
+                                            style={{ objectFit: 'contain' }}
                                         />
                                     </div>
                                 )}
@@ -122,42 +130,61 @@ const TradingTips = () => {
     }
 
     return (
-        <section className="learning section-padding" style={{ backgroundColor: '#f8f9fa' }}>
+        <section className="learning section-padding tips-section">
             <div className="container">
-                <h2 className="section-title">Trading <span>Tips</span></h2>
-
-                <div className="learning-grid">
-                    {tips.map((post) => (
-                        <div 
-                            className="learning-card" 
-                            key={post.id} 
-                            onClick={() => setSelectedTip(post)}
-                            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}
-                        >
-                            <div className="card-icon" style={{ overflow: 'hidden', height: '180px', width: '100%', borderRadius: '12px', marginBottom: '1.5rem', background: '#f0f0f0' }}>
-                                <img 
-                                    src={post.featured_image_url || iconsPack} 
-                                    alt={post.title} 
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                />
-                            </div>
-                            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>{post.title}</h3>
-                            <p style={{ marginBottom: '1.5rem', flexGrow: 1 }}>{post.description ? stripHtml(post.description) : stripHtml(post.content)}</p>
-                            
-                            <button 
-                                className="read-more-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedTip(post);
-                                }}
-                                style={{ marginTop: 'auto', alignSelf: 'flex-start' }}
-                            >
-                                Read Article
-                                <ArrowRight size={16} />
-                            </button>
-                        </div>
-                    ))}
+                <div className="tips-header">
+                    <h2 className="section-title">Trading <span>Tips</span></h2>
+                    <div className="date-filter">
+                        <label>Date Filter: </label>
+                        <input 
+                            type="date" 
+                            value={selectedDate} 
+                            onChange={e => setSelectedDate(e.target.value)} 
+                        />
+                        {selectedDate && <button onClick={() => setSelectedDate('')}>Clear</button>}
+                    </div>
                 </div>
+
+                {filteredTips.length === 0 ? (
+                    <p style={{textAlign: 'center', margin: '40px 0'}}>No trading tips available for this date.</p>
+                ) : (
+                    <div className="tips-slider-wrapper">
+                        <div className="tips-slider" ref={sliderRef}>
+                            {filteredTips.map((post) => (
+                                <div 
+                                    className="tip-card" 
+                                    key={post.id} 
+                                    onClick={() => setSelectedTip(post)}
+                                >
+                                    <div className="tip-icon">
+                                        <img 
+                                            src={post.featured_image_url || iconsPack} 
+                                            alt={post.title} 
+                                        />
+                                    </div>
+                                    <h3>{post.title}</h3>
+                                    <p>{post.description ? stripHtml(post.description) : stripHtml(post.content)}</p>
+                                    
+                                    <button 
+                                        className="know-more-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTip(post);
+                                        }}
+                                    >
+                                        Know more
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="slider-dots">
+                            {filteredTips.map((_, i) => (
+                                <div key={i} className="dot" title={`Tip ${i+1}`} />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     );
