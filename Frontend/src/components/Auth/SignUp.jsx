@@ -35,8 +35,8 @@ function SignUp({ onSwitchToLogin }) {
     if (formData.password.length < 8) return 'Password must be at least 8 characters'
     if (formData.password !== formData.confirmPassword) return 'Passwords do not match'
     if (formData.mobile.length < 10) return 'Valid mobile number is required'
-    if (!formData.age || formData.age < 18) return 'Must be at least 18 years old'
-    if (!formData.gender) return 'Please select a gender'
+    // if (!formData.age || formData.age < 18) return 'Must be at least 18 years old'
+    // if (!formData.gender) return 'Please select a gender'
     return ''
   }
 
@@ -60,8 +60,8 @@ function SignUp({ onSwitchToLogin }) {
         email: formData.email,
         password: formData.password,
         mobile: formData.mobile,
-        age: parseInt(formData.age),
-        gender: formData.gender
+        // age: parseInt(formData.age),
+        // gender: formData.gender
       }
 
       // Call real backend API via AuthContext
@@ -143,6 +143,42 @@ function SignUp({ onSwitchToLogin }) {
 
           <div className="form-row">
             <div className="form-group">
+              <label htmlFor="mobile">Mobile Number</label>
+              <div className="input-wrapper">
+                <Phone size={18} />
+                <input
+                  type="tel"
+                  id="mobile"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  placeholder="1234567895"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* <div className="form-group">
+              <label htmlFor="age">Age</label>
+              <div className="input-wrapper">
+                <Calendar size={18} />
+                <input
+                  type="number"
+                  id="age"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  placeholder="25"
+                  min="18"
+                  max="100"
+                  disabled={loading}
+                />
+              </div>
+            </div> */}
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
               <label htmlFor="password">Password</label>
               <div className="input-wrapper">
                 <Lock size={18} />
@@ -191,43 +227,7 @@ function SignUp({ onSwitchToLogin }) {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="mobile">Mobile Number</label>
-              <div className="input-wrapper">
-                <Phone size={18} />
-                <input
-                  type="tel"
-                  id="mobile"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  placeholder="1234567895"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="age">Age</label>
-              <div className="input-wrapper">
-                <Calendar size={18} />
-                <input
-                  type="number"
-                  id="age"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleChange}
-                  placeholder="25"
-                  min="18"
-                  max="100"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-row form-row.full">
+          {/* <div className="form-row form-row.full">
             <div className="form-group">
               <label htmlFor="gender">Gender</label>
               <div className="input-wrapper">
@@ -246,7 +246,7 @@ function SignUp({ onSwitchToLogin }) {
                 </select>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <button
             type="submit"

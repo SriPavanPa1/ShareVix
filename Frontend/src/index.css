@@ -354,7 +354,7 @@ ul {
 
 .profile-menu-btn {
   background: none;
-  border: 2px solid transparent;
+  border: 2px solid var(--primary);
   border-radius: 50%;
   padding: 6px;
   cursor: pointer;
@@ -366,7 +366,7 @@ ul {
 }
 
 .profile-menu-btn:hover {
-  border-color: var(--primary);
+  border-color: var(--primary-dark);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   color: var(--primary-dark);
 }
