@@ -120,11 +120,11 @@ const Navbar = () => {
                                     <div className="profile-dropdown-menu">
                                         <div className="profile-dropdown-header">
                                             <div className="profile-dropdown-avatar">
-                                                <img src={logoImg} alt="Admin" />
+                                                <img src={logoImg} alt="Profile" />
                                             </div>
                                             <div className="profile-dropdown-info">
                                                 <span className="profile-dropdown-name">{user.name}</span>
-                                                <span className="profile-dropdown-role">Administrator</span>
+                                                {isAdmin() && <span className="profile-dropdown-role">Administrator</span>}
                                             </div>
                                         </div>
                                         <div className="profile-dropdown-divider" />

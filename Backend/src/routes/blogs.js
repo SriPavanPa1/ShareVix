@@ -467,6 +467,7 @@ export async function updateBlogWithMedia(request, env, supabase, user, blogId) 
 
         // Handle featured image
         let featuredImageUrl = blog.featured_image_url;
+        let resultFeatured = null;
         const featuredImage = formData.get('featured_image');
 
         if (removeFeaturedImage) {
@@ -492,8 +493,8 @@ export async function updateBlogWithMedia(request, env, supabase, user, blogId) 
                         console.error('Featured image cleanup failed:', e);
                     }
                 }
-                const result = await uploadToImageKit(env, featuredImage, featuredImage.name, '/blogs/featured');
-                featuredImageUrl = result.url;
+                resultFeatured = await uploadToImageKit(env, featuredImage, featuredImage.name, '/blogs/featured');
+                featuredImageUrl = resultFeatured.url;
             } catch (err) {
                 console.error('Featured image upload error:', err);
                 return errorResponse('Failed to upload featured image', 500);
