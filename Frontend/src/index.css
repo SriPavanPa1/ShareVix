@@ -770,6 +770,7 @@ ul {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .learning-card:hover {
@@ -783,7 +784,7 @@ ul {
   height: 120px;
   background: var(--bg-soft);
   border-radius: var(--radius-sm);
-  margin-bottom: 24px;
+  margin: 0 auto 24px auto;
   display: flex;
   align-items: center;
   justify-content: center;

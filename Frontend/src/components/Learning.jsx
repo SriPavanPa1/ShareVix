@@ -1,12 +1,28 @@
 import React from 'react'
-import iconsPack from '../assets/icons.png'
+import { BookOpen, Activity, ArrowRightLeft, Target } from 'lucide-react'
 
 const Learning = () => {
     const topics = [
-        { title: 'Basics of Stock Market', desc: 'Master stock market basic terms and key principles for a solid foundation.' },
-        { title: 'Technicals of Option', desc: 'Explore basics, Greeks, volatility, and strategies for successful trading.' },
-        { title: 'Option Trading', desc: 'Master option basics and key strategies for confident trading.' },
-        { title: 'Strategy for Profit Trading', desc: 'Optimize trades, develop a robust strategy for profitable trading success.' }
+        { 
+            title: 'Basics of Stock Market', 
+            desc: 'Master stock market basic terms and key principles for a solid foundation.',
+            icon: <BookOpen size={64} strokeWidth={1.5} color="#2563EB" /> 
+        },
+        { 
+            title: 'Technicals of Option', 
+            desc: 'Explore basics, Greeks, volatility, and strategies for successful trading.',
+            icon: <Activity size={64} strokeWidth={1.5} color="#10B981" /> 
+        },
+        { 
+            title: 'Option Trading', 
+            desc: 'Master option basics and key strategies for confident trading.',
+            icon: <ArrowRightLeft size={64} strokeWidth={1.5} color="#F59E0B" /> 
+        },
+        { 
+            title: 'Strategy for Profit Trading', 
+            desc: 'Optimize trades, develop a robust strategy for profitable trading success.',
+            icon: <Target size={64} strokeWidth={1.5} color="#EF4444" /> 
+        }
     ]
 
     return (
@@ -18,7 +34,7 @@ const Learning = () => {
                     {topics.map((topic, index) => (
                         <div className="learning-card" key={index}>
                             <div className="card-icon">
-                                <img src={iconsPack} alt={topic.title} />
+                                {topic.icon}
                             </div>
                             <h3>{topic.title}</h3>
                             <p>{topic.desc}</p>
