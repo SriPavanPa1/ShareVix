@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 /* ─── Social platform data ──────────────────────────────────────────── */
 const SOCIALS = [
@@ -69,15 +70,38 @@ const SOCIALS = [
 
 const ContactUs = () => {
     const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
-    const [submitted, setSubmitted] = useState(false);
+    const [status, setStatus] = useState('idle'); // idle | sending | success | error
+    const [errorMsg, setErrorMsg] = useState('');
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 4000);
-        setForm({ name: '', email: '', phone: '', message: '' });
+        setStatus('sending');
+        setErrorMsg('');
+
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        const templateParams = {
+            from_name: form.name,
+            from_email: form.email,
+            phone: form.phone || 'Not provided',
+            message: form.message,
+            to_email: 'support@sharevix.com',
+        };
+
+        try {
+            await emailjs.send(serviceId, templateId, templateParams, publicKey);
+            setStatus('success');
+            setForm({ name: '', email: '', phone: '', message: '' });
+            setTimeout(() => setStatus('idle'), 5000);
+        } catch (err) {
+            console.error('EmailJS error:', err);
+            setErrorMsg('Failed to send. Please try again or email us directly.');
+            setStatus('error');
+        }
     };
 
     return (
@@ -155,6 +179,17 @@ const ContactUs = () => {
           font-size: 0.85rem;
           text-align: center;
           border: 1px solid rgba(255,255,255,0.35);
+        }
+
+        .cu-error {
+          margin-top: 0.8rem;
+          padding: 0.7rem 1rem;
+          background: rgba(239,68,68,0.25);
+          border-radius: 8px;
+          font-size: 0.85rem;
+          text-align: center;
+          border: 1px solid rgba(239,68,68,0.5);
+          color: #fff;
         }
 
         /* ── Right: contact info ── */
@@ -239,9 +274,19 @@ const ContactUs = () => {
                                 value={form.message} onChange={handleChange}
                             />
                         </div>
-                        <button type="submit" className="cu-submit">Submit Ticket</button>
-                        {submitted && (
+                        <button
+                            type="submit"
+                            className="cu-submit"
+                            disabled={status === 'sending'}
+                            style={{ opacity: status === 'sending' ? 0.75 : 1 }}
+                        >
+                            {status === 'sending' ? 'Sending…' : 'Submit Ticket'}
+                        </button>
+                        {status === 'success' && (
                             <div className="cu-success">✓ Ticket submitted! We'll respond within 24 hours.</div>
+                        )}
+                        {status === 'error' && (
+                            <div className="cu-error">{errorMsg}</div>
                         )}
                     </form>
                 </div>
