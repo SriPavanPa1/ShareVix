@@ -91,7 +91,7 @@ const AboutOwner = () => {
                             <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '50%', marginBottom: '1rem' }}>
                                 <Target size={28} color="#007bff" />
                             </div>
-                            <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: '#333' }}>Data-Driven Strategy</h4>
+                            <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: '#333' }}>Quant Trader</h4>
                             <p style={{ fontSize: '0.95rem', color: '#666' }}>Disciplined approach to trading success</p>
                         </div>
                     </div>

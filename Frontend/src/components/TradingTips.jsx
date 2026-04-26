@@ -18,9 +18,9 @@ const TradingTips = () => {
             try {
                 const response = await blogAPI.getAll({ page: 1, limit: 100 });
                 const allBlogs = response.data.blogs || [];
-                // Filter for Trading Tips category
+                // Filter for Daily Update category
                 const tradingTips = allBlogs.filter(post => 
-                    post.category === 'Trading Tips' && 
+                    post.category === 'Daily Update' && 
                     (!post.tags || 
                      post.tags.length === 0 || 
                      (Array.isArray(post.tags) && post.tags.some(t => t.toLowerCase() === 'blogs')) ||
@@ -29,7 +29,7 @@ const TradingTips = () => {
                 
                 setTips(tradingTips);
             } catch (error) {
-                console.error("Error fetching trading tips:", error);
+                console.error("Error fetching Daily Update:", error);
             } finally {
                 setLoading(false);
             }
@@ -78,7 +78,7 @@ const TradingTips = () => {
                                 className="back-btn"
                                 onClick={() => setSelectedTip(null)}
                             >
-                                <ChevronRight size={20} /> Back to Trading Tips
+                                <ChevronRight size={20} /> Back to Daily Update
                             </button>
                         </div>
                     </section>
@@ -118,7 +118,7 @@ const TradingTips = () => {
                                         className="back-btn-bottom"
                                         onClick={() => setSelectedTip(null)}
                                     >
-                                        <ChevronRight size={20} /> Back to Trading Tips
+                                        <ChevronRight size={20} /> Back to Daily Update
                                     </button>
                                 </div>
                             </article>
@@ -146,7 +146,7 @@ const TradingTips = () => {
                 </div>
 
                 {filteredTips.length === 0 ? (
-                    <p style={{textAlign: 'center', margin: '40px 0'}}>No trading tips available for this date.</p>
+                    <p style={{textAlign: 'center', margin: '40px 0'}}>No Daily Update available for this date.</p>
                 ) : (
                     <div className="tips-slider-wrapper">
                         <div className="tips-slider" ref={sliderRef}>

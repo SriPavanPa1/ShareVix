@@ -76,7 +76,7 @@ const Navbar = () => {
                         <li><Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link></li>
                         {/* <li><Link to="/courses">Courses</Link></li> */}
                         <li><Link to="/blogs" onClick={() => setMobileMenuOpen(false)}>Blogs</Link></li>
-                        <li><Link to="/reports" onClick={() => setMobileMenuOpen(false)}>Reports</Link></li>
+                        <li><Link to="/reports" onClick={() => setMobileMenuOpen(false)}>Deep Reports</Link></li>
                         {/* <li><Link to="/membership">Join The Membership</Link></li> */}
                         <li><Link to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact Us</Link></li>
 
